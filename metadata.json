@@ -1,0 +1,5 @@
+{
+  "name": "MECC AMAL Smart Response",
+  "description": "An Angular application for MECC AMAL to manage active programs, track responder attendance, and configure cloud settings. This app provides a smart, cloud-based response system.",
+  "requestFramePermissions": []
+}

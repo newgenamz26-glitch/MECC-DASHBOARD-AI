@@ -1,0 +1,68 @@
+<div class="space-y-6">
+  <section class="bg-white p-6 rounded-[32px] shadow-sm space-y-5 border border-sky-50">
+      @if (isLoading()) {
+        <app-loading-indicator message="Memuat turun senarai program..."></app-loading-indicator>
+      } @else if (error()) {
+        <div class="text-center py-4">
+          <p class="text-xs text-red-500 italic">{{ error() }}</p>
+          <button (click)="fetchPrograms()" class="mt-3 bg-sky-100 text-sky-700 text-xs font-bold px-4 py-2 rounded-lg hover:bg-sky-200 transition-colors">
+            Cuba Lagi
+          </button>
+        </div>
+      } @else {
+        <div class="pt-2">
+            <div class="flex justify-between items-center px-2 mb-1">
+              <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pilih Program</label>
+              <button (click)="fetchPrograms()" class="p-2 bg-sky-100 rounded-full text-sky-600 hover:bg-sky-200 hover:rotate-180 transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:rotate-0" [disabled]="isLoading() || !stateSvc.isCloudConnected()">
+                <svg [class.animate-spin]="isLoading()" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              </button>
+            </div>
+            <select 
+              class="w-full p-4 bg-slate-50 border-0 rounded-2xl text-sm font-bold text-sky-800 focus:ring-2 focus:ring-sky-500 outline-none" 
+              (change)="selectProgram($event)"
+              [disabled]="isLoading() || !stateSvc.isCloudConnected()">
+                @if (!stateSvc.isCloudConnected()) {
+                   <option value="">-- Cloud belum disambung --</option>
+                } @else if (programs().length === 0) {
+                   <option value="">-- Tiada program ditemui --</option>
+                } @else {
+                  <option value="">-- Pilih Program --</option>
+                  @for (prog of programs(); track prog.id || prog.idprogram) {
+                    <option [value]="prog.id || prog.idprogram" [selected]="(prog.id || prog.idprogram) === stateSvc.activeProgram()?.id">{{ prog.namaprogram }}</option>
+                  }
+                }
+            </select>
+        </div>
+      }
+  </section>
+
+  @if (stateSvc.activeProgram(); as prog) {
+    <section class="bg-white p-6 rounded-[32px] shadow-sm space-y-4 border border-sky-50">
+      <h3 class="text-[11px] font-black text-sky-400 uppercase tracking-[0.2em]">Maklumat Program Aktif</h3>
+      <div class="space-y-3">
+          <div>
+              <p class="text-xs font-bold text-slate-400">Nama Program</p>
+              <p class="text-base font-bold text-slate-800">{{ prog.namaprogram }}</p>
+          </div>
+          <div>
+              <p class="text-xs font-bold text-slate-400">ID Program</p>
+              <p class="text-base font-mono font-bold text-slate-600 bg-slate-50 px-2 py-1 rounded-md inline-block">{{ prog.id }}</p>
+          </div>
+          <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+              <div>
+                  <p class="text-xs font-bold text-slate-400">Tarikh</p>
+                  <p class="text-sm font-semibold text-slate-700">{{ prog.tarikh }}</p>
+              </div>
+              <div>
+                  <p class="text-xs font-bold text-slate-400">Masa</p>
+                  <p class="text-sm font-semibold text-slate-700">{{ prog.masa }}</p>
+              </div>
+          </div>
+          <div>
+              <p class="text-xs font-bold text-slate-400">Lokasi</p>
+              <p class="text-sm font-semibold text-slate-700">{{ prog.lokasi }}</p>
+          </div>
+      </div>
+    </section>
+  }
+</div>
