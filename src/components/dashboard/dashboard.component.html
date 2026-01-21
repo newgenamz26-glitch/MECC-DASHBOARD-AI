@@ -1,72 +1,354 @@
 <div class="space-y-5">
   <!-- Kad Program -->
   <div class="bg-white p-7 rounded-[32px] shadow-sm border border-sky-50 relative overflow-hidden">
-    <div class="absolute -top-4 -right-4 w-24 h-24 bg-sky-50 rounded-full opacity-50"></div>
-    <h2 class="text-[11px] font-black text-sky-400 uppercase tracking-[0.2em] mb-2">Program Aktif</h2>
     @if (stateSvc.activeProgram(); as prog) {
-      <div>
-        <p class="text-2xl font-black text-slate-800 leading-tight">{{ prog.namaprogram }}</p>
-        <div class="mt-3 inline-flex items-center gap-2 bg-sky-50 text-sky-700 text-[10px] font-bold px-3 py-1.5 rounded-full border border-sky-100">
-          ID: {{ prog.id }}
+      <div class="absolute -top-4 -right-4 w-24 h-24 bg-sky-50 rounded-full opacity-50"></div>
+      <div class="relative">
+        <h2 class="text-[11px] font-black text-sky-400 uppercase tracking-[0.2em] mb-2">Program Aktif</h2>
+        <div class="flex justify-between items-start gap-4">
+          <div class="flex-grow">
+            <p class="text-2xl font-black text-slate-800 leading-tight">{{ prog.namaprogram }}</p>
+            <div class="mt-4 pt-4 border-t border-sky-100 flex items-center space-x-6 text-sm">
+              <div class="flex items-center gap-2 text-slate-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-sky-500 flex-shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                <span class="font-semibold">{{ prog.lokasi || 'Tidak Dinyatakan' }}</span>
+              </div>
+              <div class="flex items-center gap-2 text-slate-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-sky-500 flex-shrink-0"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span class="font-semibold">{{ formatTime(prog.masa) }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex-shrink-0 text-center bg-sky-50 border border-sky-100 rounded-2xl p-4">
+              <p class="text-3xl font-black text-sky-600">{{ caseReports().length }}</p>
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-1">Kes</p>
+          </div>
         </div>
       </div>
     } @else {
-      <div>
-        <p class="text-2xl font-black text-slate-800 leading-tight">Sila Pilih Program</p>
-        <div class="mt-3 inline-flex items-center gap-2 bg-slate-50 text-slate-500 text-[10px] font-bold px-3 py-1.5 rounded-full border border-slate-100">
-          ID: ---
+      @if(stateSvc.loggedInResponder()?.role === 'PIC Program') {
+        <div class="text-center py-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-slate-400 mb-3"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          <p class="text-xl font-bold text-slate-700">Tiada Program Diaktifkan</p>
+          <p class="text-sm text-slate-500 mt-1">Sila hubungi PIC MECC untuk aktifkan program.</p>
         </div>
-      </div>
+      } @else {
+        <div class="text-center py-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-slate-400 mb-3"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          <p class="text-xl font-bold text-slate-700">Tiada Program Diaktifkan</p>
+          <p class="text-sm text-slate-500 mt-1">Sila aktifkan satu program di tab <span class="font-bold text-sky-600">Program</span>.</p>
+        </div>
+      }
     }
   </div>
 
-  <!-- Statistik -->
-  <div class="grid grid-cols-2 gap-4">
-    <div class="bg-white p-6 rounded-[32px] shadow-sm border border-sky-50 text-center">
-      <p class="text-3xl font-black text-sky-600">0</p>
-      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-1">Laporan Saya</p>
+  @if (stateSvc.activeProgram()) {
+    <!-- Statistik -->
+    <div class="grid grid-cols-2 gap-4">
+      <div class="bg-white p-6 rounded-[32px] shadow-sm border border-sky-50 text-center">
+        <p class="text-3xl font-black text-sky-600">{{ caseReports().length }}</p>
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-1">Jumlah Kes</p>
+      </div>
+      <div class="bg-white p-6 rounded-[32px] shadow-sm border border-sky-50 text-center">
+        <p class="text-3xl font-black text-sky-600">{{ activeResponderCount() }}</p>
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-1">Responder Aktif</p>
+      </div>
     </div>
-    <div class="bg-white p-6 rounded-[32px] shadow-sm border border-sky-50 text-center">
-      <p class="text-3xl font-black text-sky-600">{{ activeResponderCount() }}</p>
-      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-1">Responder Aktif</p>
-    </div>
-  </div>
 
-  <!-- Log Kehadiran -->
-  <div class="space-y-3">
-    <div class="flex justify-between items-center px-2">
-      <h3 class="text-[11px] font-black text-slate-500 uppercase tracking-widest">Senarai Bertugas</h3>
-      <button (click)="fetchAttendance()" class="p-2 bg-sky-100 rounded-full text-sky-600 hover:bg-sky-200 hover:rotate-180 transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:rotate-0" [disabled]="isLoading()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-      </button>
-    </div>
+    <!-- Operational Details Section -->
     <div class="space-y-3">
-      @if (isLoading()) {
-        <div class="bg-white/50 rounded-[32px] border border-dashed border-sky-200">
-          <app-loading-indicator message="Menyemak data Cloud..."></app-loading-indicator>
+      <div class="flex justify-between items-center px-2">
+        <h3 class="text-[11px] font-black text-slate-500 uppercase tracking-widest">Maklumat Operasi</h3>
+      </div>
+      @if(isLoadingDetails()) {
+        <div class="bg-white p-6 rounded-[32px] shadow-sm border border-sky-50 flex items-center justify-center gap-3 text-sm font-semibold text-slate-500">
+            <svg class="animate-spin h-5 w-5 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Memuat turun maklumat operasi...</span>
         </div>
-      } @else if (error()) {
-        <p class="text-xs text-red-500 text-center py-8 italic bg-red-50/50 rounded-[32px] border border-dashed border-red-200">{{ error() }}</p>
-      } @else if (attendanceList().length === 0) {
-        <p class="text-xs text-slate-400 text-center py-8 italic bg-white/50 rounded-[32px] border border-dashed border-sky-200">Tiada rekod kehadiran ditemui.</p>
-      } @else {
-        @for (row of attendanceList(); track row.nama + row.mula) {
-          <div class="bg-white p-5 rounded-[28px] shadow-sm border" [class.border-slate-50]="row.tamat" [class.opacity-60]="row.tamat" [class.border-sky-100]="!row.tamat" [class.shadow-md]="!row.tamat" [class.pulse-sky]="!row.tamat">
-            <div class="flex justify-between items-center">
-                <div>
-                    <p class="text-[13px] font-black text-slate-800">{{ row.nama }}</p>
-                    <p class="text-[9px] text-slate-400 font-bold uppercase mt-0.5 tracking-tighter">🕒 {{ getFormattedTime(row.mula) }} - {{ row.tamat ? getFormattedTime(row.tamat) : 'Sekarang' }}</p>
-                </div>
-                <div class="text-right">
-                    <span class="text-[10px] font-black text-sky-700 bg-sky-50 px-2.5 py-1 rounded-full border border-sky-100">{{ row.kes }} KES</span>
-                    <p class="text-[8px] mt-1.5 font-black uppercase tracking-widest" [class.text-slate-300]="row.tamat" [class.text-sky-500]="!row.tamat">
-                      {{ row.tamat ? 'Tamat' : '● Aktif' }}
-                    </p>
-                </div>
+      } @else if (errorDetails()) {
+        <div class="bg-red-50 text-red-800 p-4 rounded-2xl border border-red-200 text-xs shadow-sm">
+          <div class="flex items-start gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <div>
+              <p class="font-bold">Gagal memuatkan maklumat operasi.</p>
+              <p class="mt-1 font-mono text-red-600">{{ errorDetails() }}</p>
             </div>
           </div>
+        </div>
+      } @else {
+        <div class="space-y-4">
+          <!-- Cekpoint -->
+          <div class="bg-white p-4 rounded-2xl shadow-sm border border-sky-50 space-y-2">
+            <h4 class="font-bold text-sky-800 text-sm">Cekpoint ({{ checkpoints().length }})</h4>
+            @if (checkpoints().length > 0) {
+              <div class="space-y-2 pt-2 border-t border-sky-100">
+                @for(cp of checkpoints(); track cp.id) {
+                  <div class="bg-sky-50/50 p-3 rounded-lg">
+                    <div class="flex justify-between items-start">
+                      <p class="font-semibold text-sm text-slate-700">{{ cp.name }}</p>
+                      @if (cp.callSign) {
+                        <span class="text-[10px] font-mono text-amber-700 bg-amber-100 px-2 py-0.5 rounded">{{ cp.callSign }}</span>
+                      }
+                    </div>
+                    <div class="mt-2 space-y-1">
+                        <div class="text-xs text-slate-500 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                            <span class="font-medium">{{ cp.location }}</span>
+                        </div>
+                        @if (cp.pic) {
+                             <div class="text-xs text-slate-500 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                <span class="font-medium">PIC: {{ cp.pic }}</span>
+                            </div>
+                        }
+                        @if (cp.crew) {
+                             <div class="text-xs text-slate-500 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                <span class="font-medium">Krew: {{ cp.crew }}</span>
+                            </div>
+                        }
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="text-xs text-slate-400 text-center py-2 italic">Tiada data cekpoint.</p>
+            }
+          </div>
+           <!-- Ambulans -->
+          <div class="bg-white p-4 rounded-2xl shadow-sm border border-sky-50 space-y-2">
+            <h4 class="font-bold text-sky-800 text-sm">Ambulan ({{ ambulances().length }})</h4>
+             @if (ambulances().length > 0) {
+              <div class="space-y-2 pt-2 border-t border-sky-100">
+                @for(amb of ambulances(); track amb.id) {
+                  <div class="bg-sky-50/50 p-3 rounded-lg">
+                    <div class="flex justify-between items-start">
+                        <p class="font-semibold text-sm text-slate-700">{{ amb.callSign }}</p>
+                        <span class="text-[10px] font-mono text-sky-600 bg-sky-100 px-2 py-0.5 rounded">{{ amb.vehicleNumber }}</span>
+                    </div>
+                    <div class="text-xs text-slate-500 flex items-center gap-2 mt-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        <span class="font-medium">{{ amb.crew }}</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="text-xs text-slate-400 text-center py-2 italic">Tiada data ambulan.</p>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+
+    <!-- Case Reports Section -->
+    <div class="space-y-3 pt-6 border-t-2 border-dashed border-sky-200">
+      <div class="flex justify-between items-center px-2">
+        <h3 class="text-[11px] font-black text-slate-500 uppercase tracking-widest">Laporan Kes</h3>
+        <button (click)="manualFetchCaseReports()" class="p-2 bg-sky-100 rounded-full text-sky-600 hover:bg-sky-200 hover:rotate-180 transition-all duration-500 disabled:opacity-50" [disabled]="isLoadingCases() || isManualRefreshingCases()">
+          <svg [class.animate-spin]="isManualRefreshingCases()" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </button>
+      </div>
+
+      @if (isLoadingCases() && caseReports().length === 0) {
+        <div class="bg-white p-6 rounded-[32px] shadow-sm border border-sky-50 flex items-center justify-center gap-3 text-sm font-semibold text-slate-500">
+            <svg class="animate-spin h-5 w-5 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Memuat turun laporan kes...</span>
+        </div>
+      } @else if (errorCases()) {
+        <p class="text-xs text-red-500 text-center py-8 italic bg-red-50/50 rounded-[32px] border border-dashed border-red-200">{{ errorCases() }}</p>
+      } @else if (caseReports().length === 0) {
+        <div class="bg-white/50 rounded-[32px] border border-dashed border-sky-200 text-center py-8">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-sky-400 mb-2">
+                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
+                <path d="m9 12 2 2 4-4"></path>
+            </svg>
+            <p class="text-sm font-bold text-slate-600">Tiada Kes Dilaporkan</p>
+            <p class="text-xs text-slate-400 mt-1">Sistem akan memaparkan laporan kes baru di sini secara automatik.</p>
+        </div>
+      } @else {
+        <!-- LATEST CASE HIGHLIGHT -->
+        @if(latestCase(); as caseItem) {
+          <div class="bg-white rounded-2xl p-4 border-2 border-sky-200 shadow-lg shadow-sky-100/50">
+            <div class="flex justify-between items-start">
+              <p class="font-bold text-slate-800 pr-4 text-sm">{{ caseItem.details }}</p>
+              <span class="text-[9px] font-black px-2.5 py-1 rounded-full whitespace-nowrap" [class.text-sky-700]="caseItem.status === 'Baru'" [class.bg-sky-100]="caseItem.status === 'Baru'" [class.text-emerald-700]="caseItem.status === 'Selesai'" [class.bg-emerald-100]="caseItem.status === 'Selesai'">
+                {{ caseItem.status }}
+              </span>
+            </div>
+            <p class="text-xs font-mono text-sky-700 bg-sky-50 px-2 py-0.5 rounded mt-2 inline-block">ID KES: {{ caseItem.id }}</p>
+            <div class="mt-3 pt-3 border-t border-slate-100 grid grid-cols-2 gap-x-2 gap-y-3 text-xs">
+                <div>
+                    <p class="font-bold text-slate-400">Masa Laporan</p>
+                    <p class="font-semibold text-slate-600">{{ formatTime(caseItem.timestamp) }}</p>
+                </div>
+                <div>
+                    <p class="font-bold text-slate-400">Lokasi</p>
+                    <p class="font-semibold text-slate-600">{{ caseItem.location }}</p>
+                </div>
+                @if(caseItem.reporterName) {
+                <div class="col-span-2">
+                    <p class="font-bold text-slate-400">Dilaporkan Oleh</p>
+                    <p class="font-semibold text-slate-600">{{ caseItem.reporterName }}</p>
+                </div>
+                }
+            </div>
+            @if (caseItem.status === 'Baru') {
+              <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-end">
+                <button (click)="updateCaseStatus(caseItem.id, 'Selesai')" [disabled]="updatingCaseId() === caseItem.id" class="text-xs font-bold bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed flex items-center gap-1.5">
+                  @if (updatingCaseId() === caseItem.id) {
+                    <svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                    <span>MENGEMAS KINI...</span>
+                  } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    <span>Tandakan Selesai</span>
+                  }
+                </button>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- OLDER CASES LOG -->
+        @if (olderCases().length > 0) {
+            <div class="text-center pt-2">
+                <button (click)="toggleCaseLog()" class="text-xs font-bold text-sky-600 bg-sky-100 px-4 py-2 rounded-lg hover:bg-sky-200 transition-colors">
+                    {{ isCaseLogVisible() ? 'Sembunyi Sejarah' : 'Lihat ' + olderCases().length + ' Kes Terdahulu' }}
+                </button>
+            </div>
+
+            @if (isCaseLogVisible()) {
+                <div class="space-y-3 pt-2 animate-fade-in-up">
+                    @for(caseItem of olderCases(); track caseItem.id) {
+                        <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm transition-opacity" [class.opacity-50]="caseItem.status === 'Selesai'">
+                            <div class="flex justify-between items-start">
+                                <p class="font-bold text-slate-800 pr-4 text-sm">{{ caseItem.details }}</p>
+                                <span class="text-[9px] font-black px-2.5 py-1 rounded-full whitespace-nowrap" [class.text-sky-700]="caseItem.status === 'Baru'" [class.bg-sky-100]="caseItem.status === 'Baru'" [class.text-emerald-700]="caseItem.status === 'Selesai'" [class.bg-emerald-100]="caseItem.status === 'Selesai'">
+                                    {{ caseItem.status }}
+                                </span>
+                            </div>
+                            <p class="text-xs font-mono text-sky-700 bg-sky-50 px-2 py-0.5 rounded mt-2 inline-block">ID KES: {{ caseItem.id }}</p>
+                            @if (caseItem.reporterName) {
+                            <div class="flex items-center gap-1.5 mt-2 text-xs text-slate-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                <span class="font-medium text-slate-600">{{ caseItem.reporterName }}</span>
+                            </div>
+                            }
+                             @if (caseItem.status === 'Baru') {
+                                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-end">
+                                <button (click)="updateCaseStatus(caseItem.id, 'Selesai')" [disabled]="updatingCaseId() === caseItem.id" class="text-xs font-bold bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed flex items-center gap-1.5">
+                                    @if (updatingCaseId() === caseItem.id) {
+                                    <svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                                    <span>MENGEMAS KINI...</span>
+                                    } @else {
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                    <span>Tandakan Selesai</span>
+                                    }
+                                </button>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
         }
       }
     </div>
-  </div>
+
+    <!-- Log Kehadiran -->
+    <div class="space-y-3 pt-6 border-t-2 border-dashed border-sky-200">
+      <div class="flex justify-between items-center px-2">
+        <h3 class="text-[11px] font-black text-slate-500 uppercase tracking-widest">Senarai Bertugas</h3>
+        <button (click)="fetchAttendance()" class="p-2 bg-sky-100 rounded-full text-sky-600 hover:bg-sky-200 hover:rotate-180 transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:rotate-0" [disabled]="isLoading()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </button>
+      </div>
+      <div class="space-y-3">
+        @if (isLoading() && !attendanceList().length) {
+          <div class="bg-white p-6 rounded-[32px] shadow-sm border border-sky-50 flex items-center justify-center gap-3 text-sm font-semibold text-slate-500">
+              <svg class="animate-spin h-5 w-5 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Menyemak data Cloud...</span>
+          </div>
+        } @else if (error()) {
+          <p class="text-xs text-red-500 text-center py-8 italic bg-red-50/50 rounded-[32px] border border-dashed border-red-200">{{ error() }}</p>
+        } @else if (!latestAttendance()) {
+          <p class="text-xs text-slate-400 text-center py-8 italic bg-white/50 rounded-[32px] border border-dashed border-sky-200">Tiada rekod kehadiran ditemui.</p>
+        } @else {
+          <!-- LATEST ATTENDANCE HIGHLIGHT -->
+          @if (latestAttendance(); as att) {
+            <div class="bg-white rounded-2xl p-4 border-2 border-sky-200 shadow-lg shadow-sky-100/50" [class.pulse-sky]="!att.tamat && stateSvc.isSimulationMode()">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="font-bold text-slate-800">{{ att.nama }}</p>
+                  <p class="text-[9px] mt-1.5 font-black uppercase tracking-widest" [class.text-slate-400]="att.tamat" [class.text-sky-500]="!att.tamat">
+                    {{ att.tamat ? 'Tamat Tugas' : '● Sedang Bertugas' }}
+                  </p>
+                </div>
+                <span class="text-[10px] font-black text-sky-700 bg-sky-50 px-2.5 py-1 rounded-full border border-sky-100">{{ att.kes }} KES</span>
+              </div>
+              <div class="mt-3 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                      <p class="font-bold text-slate-400">Log Masuk</p>
+                      <p class="font-semibold text-slate-600">{{ getFormattedTime(att.mula) }}</p>
+                  </div>
+                  <div>
+                      <p class="font-bold text-slate-400">Log Keluar</p>
+                      <p class="font-semibold text-slate-600">{{ getFormattedTime(att.tamat) }}</p>
+                  </div>
+              </div>
+            </div>
+          }
+
+          <!-- OLDER ATTENDANCE LOG -->
+          @if (olderAttendance().length > 0) {
+            <div class="text-center pt-2">
+                <button (click)="toggleAttendanceLog()" class="text-xs font-bold text-sky-600 bg-sky-100 px-4 py-2 rounded-lg hover:bg-sky-200 transition-colors">
+                    {{ isAttendanceLogVisible() ? 'Sembunyi Sejarah' : 'Lihat ' + olderAttendance().length + ' Log Terdahulu' }}
+                </button>
+            </div>
+
+            @if (isAttendanceLogVisible()) {
+                <div class="mt-2 animate-fade-in-up bg-white rounded-2xl p-3 border border-slate-200 shadow-sm">
+                    <div class="grid grid-cols-10 gap-2 px-2 py-2 text-[10px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                        <span class="col-span-4">Nama Penuh</span>
+                        <span class="col-span-2 text-center">Log Masuk</span>
+                        <span class="col-span-2 text-center">Log Keluar</span>
+                        <span class="col-span-2 text-center">Kes</span>
+                    </div>
+                    <div class="space-y-1 mt-2">
+                        @for(att of olderAttendance(); track att.nama + att.mula) {
+                            <div 
+                                class="grid grid-cols-10 gap-2 items-center text-xs p-2 rounded-lg"
+                                [class.opacity-50]="att.tamat"
+                                [class.bg-slate-50/50]="$index % 2 !== 0"
+                            >
+                                <div class="col-span-4 flex flex-col">
+                                    <span class="font-semibold text-slate-800">{{ att.nama }}</span>
+                                     <span class="text-[9px] font-bold" [class.text-slate-400]="att.tamat" [class.text-sky-500]="!att.tamat">
+                                        {{ att.tamat ? 'Tamat Tugas' : '● Aktif' }}
+                                    </span>
+                                </div>
+                                <span class="col-span-2 text-center font-mono text-slate-600">{{ getFormattedTime(att.mula) }}</span>
+                                <span class="col-span-2 text-center font-mono text-slate-600">{{ getFormattedTime(att.tamat) }}</span>
+                                <span class="col-span-2 text-center font-bold text-sky-700 bg-sky-100 rounded-md py-0.5">{{ att.kes }}</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+          }
+        }
+      </div>
+    </div>
+  }
 </div>

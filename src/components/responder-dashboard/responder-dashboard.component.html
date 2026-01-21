@@ -1,0 +1,62 @@
+<div class="flex flex-col min-h-screen bg-sky-50">
+  <!-- Header -->
+  <nav class="bg-sky-900 text-white p-5 sticky top-0 z-50 shadow-md flex justify-between items-center rounded-b-[30px]">
+      <div>
+          <h1 class="font-bold text-lg leading-tight">Dashboard Petugas</h1>
+          <p class="text-xs text-sky-300 font-semibold">{{ stateSvc.loggedInResponder()?.name }} ({{ stateSvc.loggedInResponder()?.role }})</p>
+      </div>
+      <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2 text-[10px] font-bold bg-white/10 px-3 py-2 rounded-full border border-white/20">
+              <div class="w-2 h-2 rounded-full bg-amber-400"></div>
+              <span>SIMULASI</span>
+          </div>
+          <button (click)="confirmLogout()" title="Log Keluar" class="text-sky-300 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10 active:scale-90">
+             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          </button>
+      </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="flex-grow max-w-md w-full mx-auto p-4 space-y-5">
+    <h3 class="text-[11px] font-black text-slate-500 uppercase tracking-widest px-2">Program Aktif</h3>
+
+    @if (isLoading()) {
+      <div class="bg-white/50 rounded-[32px] border border-dashed border-sky-200">
+        <app-loading-indicator message="Menyemak program aktif..."></app-loading-indicator>
+      </div>
+    } @else if (error()) {
+      <div class="text-center py-8 bg-red-50/50 rounded-[32px] border border-dashed border-red-200">
+        <p class="text-xs text-red-500 italic">{{ error() }}</p>
+      </div>
+    } @else if (activePrograms().length === 0) {
+      <div class="bg-white/50 rounded-[32px] border border-dashed border-sky-200 text-center py-8">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-sky-400 mb-2">
+               <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <p class="text-sm font-bold text-slate-600">Tiada Program Aktif</p>
+          <p class="text-xs text-slate-400 mt-1">Sila tunggu Pusat Kawalan mengaktifkan program.</p>
+      </div>
+    } @else {
+      <div class="space-y-3">
+        @for (prog of activePrograms(); track prog.id) {
+           <div class="bg-white p-7 rounded-[32px] shadow-sm border-2 border-sky-200 relative overflow-hidden animate-fade-in-up">
+              <div class="absolute -top-4 -right-4 w-24 h-24 bg-sky-50 rounded-full opacity-50"></div>
+              <div class="relative">
+                <p class="text-2xl font-black text-slate-800 leading-tight">{{ prog.namaprogram }}</p>
+                <div class="mt-4 pt-4 border-t border-sky-100 flex items-center space-x-6 text-sm">
+                  <div class="flex items-center gap-2 text-slate-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-sky-500 flex-shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    <span class="font-semibold">{{ prog.lokasi || 'Tidak Dinyatakan' }}</span>
+                  </div>
+                  <div class="flex items-center gap-2 text-slate-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-sky-500 flex-shrink-0"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span class="font-semibold">{{ formatTime(prog.masa) }}</span>
+                  </div>
+                </div>
+              </div>
+          </div>
+        }
+      </div>
+    }
+  </main>
+</div>

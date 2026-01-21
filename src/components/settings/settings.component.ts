@@ -1,16 +1,23 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { CommonModule, JsonPipe } from '@angular/common';
 import { StateService } from '../../services/state.service';
 import { ApiService } from '../../services/api.service';
 import { NotificationService } from '../../services/notification.service';
+import { SimulationService } from '../../services/simulation.service';
 import { Program } from '../../models';
 import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicator.component';
 
+interface Feature {
+  title: string;
+  description: string;
+  mode: 'simulasi' | 'live' | 'semua';
+  version: number;
+}
+
 @Component({
   selector: 'app-settings',
-  standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, LoadingIndicatorComponent],
+  imports: [ReactiveFormsModule, CommonModule, LoadingIndicatorComponent, JsonPipe],
   templateUrl: './settings.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -18,16 +25,18 @@ export class SettingsComponent {
   stateSvc = inject(StateService);
   private apiSvc = inject(ApiService);
   private notificationSvc = inject(NotificationService);
-  private fb = inject(FormBuilder);
+  private simulationSvc = inject(SimulationService);
+  // FIX: Explicitly type injected FormBuilder to fix type inference issues.
+  private fb: FormBuilder = inject(FormBuilder);
 
   isBackendSetupVisible = signal(false);
   isProgramFormVisible = signal(false);
+  isConfigVisible = signal(false);
+  isVersionInfoVisible = signal(false);
   isVerifying = signal(false);
   isTesting = signal(false);
   programId = signal('');
   isCheckingLatestProgram = signal(false);
-  isGeneratingManualId = signal(false);
-  manualGeneratedId = signal<string | null>(null);
   isCheckingNextId = signal(false);
   nextCloudId = signal<string | null>(null);
   isCheckingStructure = signal(false);
@@ -35,6 +44,29 @@ export class SettingsComponent {
   isProgramListModalVisible = signal(false);
   allPrograms = signal<Program[]>([]);
   isLoadingPrograms = signal(false);
+  lockingProgramId = signal<string | null>(null);
+
+  isSavingToDocs = signal(false);
+
+  // Signals for Add Sample Data feature
+  isAddingSampleData = signal(false);
+  isSampleDataConfirmVisible = signal(false);
+
+  // Make simulation data available to the template
+  simulationData = this.simulationSvc.exportedData;
+
+  // --- Version Info Features ---
+  private readonly allFeatures: Feature[] = ([
+    { version: 2.4, mode: 'semua', title: 'Log Keluar Global', description: 'Butang log keluar universal di header utama untuk akses mudah.' },
+    { version: 2.3, mode: 'simulasi', title: 'Eksport Data Simulasi', description: 'Muat turun semua data sesi latihan (program, kes, kehadiran) sebagai fail JSON.' },
+    { version: 2.2, mode: 'simulasi', title: 'Cipta Program Latihan', description: 'Fungsi untuk menambah program baru terus di dalam Mod Simulasi untuk latihan menyeluruh.' },
+    { version: 2.1, mode: 'semua', title: 'Antara Muka Disatukan', description: 'Reka bentuk visual yang dikemaskini untuk pengalaman pengguna yang lebih baik.' },
+    { version: 2.0, mode: 'simulasi', title: 'Mod Latihan Interaktif', description: 'Pengenalan Mod Simulasi dengan data sampel untuk tujuan latihan dan demo.' },
+    { version: 1.0, mode: 'live', title: 'Penyambungan Cloud', description: 'Integrasi dengan Google Sheets untuk pengurusan data secara langsung.' },
+  ] as Feature[]).sort((a, b) => b.version - a.version);
+
+  liveAndCommonFeatures = this.allFeatures.filter(f => f.mode === 'live' || f.mode === 'semua');
+  simulationFeatures = this.allFeatures.filter(f => f.mode === 'simulasi');
 
   backendForm = this.fb.group({
     url: [this.stateSvc.gasUrl(), [Validators.required, Validators.pattern('^https://script\\.google\\.com.*')]],
@@ -47,6 +79,14 @@ export class SettingsComponent {
     location: ['', Validators.required],
   });
 
+  toggleConfigVisibility(): void {
+    this.isConfigVisible.update(v => !v);
+  }
+  
+  toggleVersionInfoVisibility(): void {
+    this.isVersionInfoVisible.update(v => !v);
+  }
+
   toggleBackendSetup(): void {
     this.isBackendSetupVisible.update(v => !v);
   }
@@ -55,7 +95,10 @@ export class SettingsComponent {
     this.isProgramFormVisible.update(v => !v);
     if (this.isProgramFormVisible()) {
       this.programForm.reset();
-      this.programId.set('Akan dijana secara automatik oleh Cloud');
+      const idText = this.stateSvc.isSimulationMode()
+        ? 'Akan dijana secara automatik oleh Simulasi'
+        : 'Akan dijana secara automatik oleh Cloud';
+      this.programId.set(idText);
     }
   }
 
@@ -130,33 +173,6 @@ export class SettingsComponent {
     }
   }
 
-  async generateManualProgramId(): Promise<void> {
-    this.isGeneratingManualId.set(true);
-    this.manualGeneratedId.set(null); // Clear previous result
-    await new Promise(resolve => setTimeout(resolve, 300)); // UX delay
-    try {
-      // Re-add local generator for this specific diagnostic tool
-      const today = new Date();
-      const year = today.getFullYear().toString();
-      const month = ('0' + (today.getMonth() + 1)).slice(-2);
-      const day = ('0' + today.getDate()).slice(-2);
-      const datePart = year + month + day;
-      const suffix = Date.now().toString().slice(-4).padStart(4, '0');
-      const newId = `${datePart}-${suffix}`;
-      this.manualGeneratedId.set(newId);
-    } catch (error) {
-      const errorMessage = (error instanceof Error) ? error.message : 'Ralat tidak diketahui berlaku.';
-      this.manualGeneratedId.set('RALAT');
-      this.notificationSvc.show(
-        'error',
-        'Gagal Jana ID Manual',
-        errorMessage
-      );
-    } finally {
-      this.isGeneratingManualId.set(false);
-    }
-  }
-
   async checkNextCloudId(): Promise<void> {
     this.isCheckingNextId.set(true);
     this.nextCloudId.set(null); // Clear previous result
@@ -213,8 +229,12 @@ export class SettingsComponent {
     const result = await this.apiSvc.saveProgram(payload);
 
     if (result.success && result.newProgram) {
-      this.stateSvc.activeProgram.set(result.newProgram);
-      this.notificationSvc.show('case', 'Program Disimpan', `Program "${result.newProgram.namaprogram}" (ID: ${result.newProgram.id}) berjaya disimpan.`);
+      // Do not set the new program as active automatically.
+      this.notificationSvc.show(
+        'case', 
+        'Program Berjaya Disimpan', 
+        `Program "${result.newProgram.namaprogram}" telah direkodkan. Sila aktifkannya di tab 'Program' untuk mula menggunakannya.`
+      );
       this.programForm.reset();
       this.isProgramFormVisible.set(false);
       this.stateSvc.programListVersion.update(v => v + 1); // Trigger refresh in other components
@@ -225,32 +245,28 @@ export class SettingsComponent {
   }
 
   async validateSheetStructure(): Promise<void> {
-    // Check if backend supports this feature
     if (!this.stateSvc.backendCapabilities().includes('validateSheets')) {
-        this.notificationSvc.show(
-            'error', 
-            'Fungsi Tidak Disokong', 
-            'Versi Google Apps Script anda adalah lama. Sila deploy versi terkini untuk menggunakan fungsi ini.'
-        );
+        this.notificationSvc.show('error', 'Fungsi Tidak Disokong', 'Versi Google Apps Script anda adalah lama. Sila deploy versi terkini.');
         return;
     }
 
     this.isCheckingStructure.set(true);
     try {
       const result = await this.apiSvc.validateSheets();
-      const { programs, attendance } = result;
+      const checks = [
+        { name: 'Programs', result: result.programs },
+        { name: 'Attendance', result: result.attendance },
+        { name: 'CaseReports', result: result.caseReports },
+        { name: 'Program Details', result: result.programDetails },
+      ];
 
-      if (programs.isValid && attendance.isValid) {
-        this.notificationSvc.show('case', 'Struktur Sah', 'Kedua-dua sheet Programs dan Attendance mempunyai header yang betul.');
+      const invalidChecks = checks.filter(c => c.result && !c.result.isValid);
+
+      if (invalidChecks.length === 0) {
+        this.notificationSvc.show('case', 'Struktur Sah', 'Semua helaian yang diperlukan mempunyai struktur yang betul.');
       } else {
-        let errorParts: string[] = [];
-        if (!programs.isValid) {
-          errorParts.push(`Programs: ${programs.message}`);
-        }
-        if (!attendance.isValid) {
-          errorParts.push(`Attendance: ${attendance.message}`);
-        }
-        this.notificationSvc.show('error', 'Struktur Tidak Sah', errorParts.join(' '));
+        const errorMessages = invalidChecks.map(c => `${c.name}: ${c.result.message}`);
+        this.notificationSvc.show('error', 'Struktur Tidak Sah Dikesan', errorMessages.join('\n'));
       }
     } catch (error) {
       const errorMessage = (error instanceof Error) ? error.message : 'Gagal menjalankan semakan struktur.';
@@ -271,10 +287,189 @@ export class SettingsComponent {
     
     const message = `URL Cloud:\n${url}\n\nHelaian Digunakan:\n${sheetInfo}`;
     
-    this.notificationSvc.show(
-        'info',
-        'Maklumat Konfigurasi',
-        message
-    );
+    this.notificationSvc.show('info', 'Maklumat Konfigurasi', message);
+  }
+
+  openDatabaseSheet(): void {
+    const sheetId = this.stateSvc.spreadsheetId();
+    if (sheetId && sheetId !== 'YOUR_SPREADSHEET_ID') {
+      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/edit`;
+      window.open(url, '_blank');
+    } else if (sheetId === 'YOUR_SPREADSHEET_ID') {
+      this.notificationSvc.show('error', 'Konfigurasi Tidak Lengkap', 'ID Pangkalan Data perlu ditetapkan di dalam fail skrip Google (Code.gs).');
+    } else {
+      this.notificationSvc.show('error', 'ID Tidak Ditemui', 'Tidak dapat mendapatkan ID Pangkalan Data dari Cloud. Sila pastikan sambungan aktif.');
+    }
+  }
+
+  async activateProgram(program: Program): Promise<void> {
+    this.lockingProgramId.set(program.id);
+    try {
+      const result = await this.apiSvc.setProgramStatus(program.id, 'Aktif');
+      if (result.success) {
+        this.notificationSvc.show('case', 'Program Diaktifkan', `Program "${program.namaprogram}" kini aktif.`);
+
+        // Update local state to reflect the change without a full re-fetch.
+        this.allPrograms.update(programs =>
+          programs.map(p => {
+            if (p.id === program.id) return { ...p, status: 'Aktif' };
+            // Deactivate any other program that was active.
+            if (p.status === 'Aktif') return { ...p, status: 'Belum Mula' };
+            return p;
+          })
+        );
+        
+        const activatedProgram: Program = { ...program, status: 'Aktif' };
+        this.stateSvc.activeProgram.set(activatedProgram);
+        
+        // Trigger a refresh for other components like the main program list.
+        this.stateSvc.programListVersion.update(v => v + 1);
+
+        this.closeProgramListModal();
+
+      } else {
+        throw new Error(result.message || 'Gagal mengaktifkan program.');
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Ralat tidak diketahui.';
+      this.notificationSvc.show('error', 'Gagal Mengaktifkan', msg);
+    } finally {
+      this.lockingProgramId.set(null);
+    }
+  }
+
+  async toggleLockProgram(program: Program, event: Event): Promise<void> {
+    event.stopPropagation();
+
+    if (this.lockingProgramId()) return;
+
+    this.lockingProgramId.set(program.id);
+    const newLockedState = !program.locked;
+    
+    try {
+      const result = await this.apiSvc.updateProgram(program.id, { locked: newLockedState });
+      if (result.success) {
+        this.allPrograms.update(programs => 
+          programs.map(p => p.id === program.id ? { ...p, locked: newLockedState } : p)
+        );
+        this.notificationSvc.show('info', 'Status Dikemaskini', `Program "${program.namaprogram}" telah ${newLockedState ? 'dikunci' : 'dibuka kunci'}.`);
+        
+        if (this.stateSvc.activeProgram()?.id === program.id) {
+          this.stateSvc.activeProgram.update(p => p ? { ...p, locked: newLockedState } : null);
+        }
+        
+        this.stateSvc.programListVersion.update(v => v + 1);
+      } else {
+        this.notificationSvc.show('error', 'Gagal Mengunci', result.message || 'Ralat tidak diketahui.');
+      }
+    } catch (error) {
+       const errorMessage = error instanceof Error ? error.message : 'Ralat berhubung dengan server.';
+       this.notificationSvc.show('error', 'Gagal Mengunci', errorMessage);
+    } finally {
+      this.lockingProgramId.set(null);
+    }
+  }
+
+  downloadSimulationData(): void {
+    const data = this.simulationSvc.exportedData();
+    const dataStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `mecc-simulation-data-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    this.notificationSvc.show('info', 'Muat Turun Bermula', 'Fail data simulasi sedang dimuat turun.');
+  }
+
+  private _generateFeatureListContent(): string {
+    let content = `Dokumen: Ringkasan Ciri-ciri & Fungsi Sistem MECC AMAL v2.4\n\n`;
+    content += `Dokumen ini memberikan gambaran keseluruhan tentang keupayaan aplikasi MECC AMAL Smart Response, merangkumi fungsi utama, ciri terkini, dan aliran kerja yang disyorkan.\n\n`;
+
+    content += `## Mod Langsung & Umum\n`;
+    this.liveAndCommonFeatures.forEach(feature => {
+      content += `* v${feature.version} - ${feature.title}: ${feature.description}\n`;
+    });
+    content += `\n`;
+
+    content += `## Mod Simulasi\n`;
+    this.simulationFeatures.forEach(feature => {
+      content += `* v${feature.version} - ${feature.title}: ${feature.description}\n`;
+    });
+
+    return content;
+  }
+
+  async saveFeaturesToDocs(): Promise<void> {
+    this.isSavingToDocs.set(true);
+    const title = 'MECC AMAL v2.4 Feature List';
+    const content = this._generateFeatureListContent();
+
+    try {
+      const result = await this.apiSvc.saveFeatureListToDocs(title, content);
+      if (result.success && result.url) {
+        window.open(result.url, '_blank');
+        this.notificationSvc.show('case', 'Dokumen Dicipta', 'Senarai ciri telah berjaya disimpan ke Google Drive anda dan dibuka dalam tab baru.');
+      } else {
+        throw new Error(result.message || 'Gagal mencipta dokumen di Google Drive.');
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Ralat tidak diketahui.';
+      this.notificationSvc.show('error', 'Gagal Menyimpan', msg);
+    } finally {
+      this.isSavingToDocs.set(false);
+    }
+  }
+
+  showSampleDataConfirm(): void {
+    this.isSampleDataConfirmVisible.set(true);
+  }
+
+  hideSampleDataConfirm(): void {
+    this.isSampleDataConfirmVisible.set(false);
+  }
+
+  async confirmAddSampleData(): Promise<void> {
+    this.hideSampleDataConfirm();
+    this.isAddingSampleData.set(true);
+    try {
+        const result = await this.apiSvc.addSampleDataToCloud();
+        if (result.success) {
+            this.notificationSvc.show('case', 'Data Sampel Ditambah', result.message || 'Data sampel berjaya ditambah.');
+        } else {
+            throw new Error(result.message || 'Gagal menambah data sampel.');
+        }
+    } catch (e) {
+        const msg = e instanceof Error ? e.message : 'Ralat tidak diketahui.';
+        this.notificationSvc.show('error', 'Operasi Gagal', msg);
+    } finally {
+        this.isAddingSampleData.set(false);
+    }
+  }
+
+  formatDate(dateString?: string): string {
+    if (!dateString) return 'N/A';
+    return dateString.substring(0, 10);
+  }
+
+  formatTime(timeString?: string): string {
+    if (!timeString) return 'N/A';
+    if (timeString.includes('T')) {
+        try {
+            const date = new Date(timeString);
+            if (isNaN(date.getTime())) return timeString;
+            const hours = ('0' + date.getHours()).slice(-2);
+            const minutes = ('0' + date.getMinutes()).slice(-2);
+            return `${hours}:${minutes}`;
+        } catch (e) {
+            return timeString;
+        }
+    }
+    return timeString;
   }
 }

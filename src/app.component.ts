@@ -1,5 +1,4 @@
-
-import { Component, ChangeDetectionStrategy, signal, inject, OnInit, OnDestroy, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { ProgramSelectorComponent } from './components/program-selector/program-selector.component';
@@ -8,53 +7,77 @@ import { NotificationComponent } from './components/notification/notification.co
 import { StateService } from './services/state.service';
 import { ApiService } from './services/api.service';
 import { NotificationService } from './services/notification.service';
+import { LoginComponent } from './components/login/login.component';
+import { ResponderLoginComponent } from './components/responder-login/responder-login.component';
+import { SimulationService } from './services/simulation.service';
+import { FeedbackFormComponent } from './components/feedback-form/feedback-form.component';
+import { ResponderDashboardComponent } from './components/responder-dashboard/responder-dashboard.component';
 
 type ActiveTab = 'dashboard' | 'program' | 'settings';
 
 @Component({
   selector: 'app-root',
-  standalone: true,
   imports: [
     CommonModule,
     DashboardComponent,
     ProgramSelectorComponent,
     SettingsComponent,
     NotificationComponent,
+    LoginComponent,
+    ResponderLoginComponent,
+    FeedbackFormComponent,
+    ResponderDashboardComponent,
   ],
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppComponent implements OnInit, OnDestroy {
+export class AppComponent {
   stateSvc = inject(StateService);
   private apiSvc = inject(ApiService);
   private notificationSvc = inject(NotificationService);
+  private simulationSvc = inject(SimulationService);
   
   activeTab = signal<ActiveTab>('dashboard');
   isOutdatedBackendWarningShown = signal(false);
+  isFeedbackModalVisible = signal(false);
   
   private statusCheckInterval: any;
 
   constructor() {
-    effect(() => {
-        // When URL is updated and we are not connected, try to connect.
-        const url = this.stateSvc.gasUrl();
-        const connected = this.stateSvc.isCloudConnected();
-        if (url && !connected) {
+    this.apiSvc.primeSuggestionCache(); // Prime cache on startup regardless of login state.
+
+    effect((onCleanup) => {
+        const loggedIn = this.stateSvc.isLoggedIn();
+
+        if (loggedIn) {
+            // Start checking cloud status once logged in.
             this.checkCloudStatus();
+            this.statusCheckInterval = setInterval(() => this.checkCloudStatus(), 30000);
         }
+
+        onCleanup(() => {
+            if (this.statusCheckInterval) {
+                clearInterval(this.statusCheckInterval);
+                this.statusCheckInterval = null;
+            }
+        });
+    });
+
+    effect(() => {
+      const initialTab = this.stateSvc.initialTab();
+      if (initialTab) {
+        this.activeTab.set(initialTab);
+        this.stateSvc.initialTab.set(null); // Consume it
+      }
     });
   }
 
-  ngOnInit() {
-    this.checkCloudStatus();
-    this.statusCheckInterval = setInterval(() => this.checkCloudStatus(), 30000); // Check every 30 seconds
-  }
-
-  ngOnDestroy() {
-    clearInterval(this.statusCheckInterval);
-  }
-
   async checkCloudStatus() {
+    if (this.stateSvc.isSimulationMode()) {
+        this.stateSvc.isCloudConnected.set(true); // In simulation, we are always "connected" to the simulator
+        return;
+    }
+
     if (this.stateSvc.gasUrl()) {
       const isOnline = await this.apiSvc.ping();
       this.stateSvc.isCloudConnected.set(isOnline);
@@ -63,37 +86,80 @@ export class AppComponent implements OnInit, OnDestroy {
             const config = await this.apiSvc.getConfig();
             this.stateSvc.backendCapabilities.set(config.actions);
             this.stateSvc.sheetNames.set(config.sheetNames);
+            this.stateSvc.spreadsheetId.set(config.spreadsheetId || null);
             this.isOutdatedBackendWarningShown.set(false); // Reset on success
         } catch (e) {
-            // This indicates an older backend that doesn't support getConfig
             this.stateSvc.backendCapabilities.set([]);
             this.stateSvc.sheetNames.set(null);
-            
-            if (!this.isOutdatedBackendWarningShown()) {
-                this.notificationSvc.show(
-                    'error', 
-                    'Backend Versi Lama Dikesan', 
-                    'Skrip Cloud anda mungkin versi lama. Sila deploy semula versi terkini untuk kefungsian penuh.'
-                );
-                this.isOutdatedBackendWarningShown.set(true);
+            this.stateSvc.spreadsheetId.set(null);
+
+            if (e instanceof Error && e.message === 'SERVER_NOT_CONFIGURED') {
+                 if (!this.isOutdatedBackendWarningShown()) { // Re-use the flag to show only once
+                    this.notificationSvc.show(
+                        'error', 
+                        'Server Belum Dikonfigurasi', 
+                        'Sila tetapkan ID Pangkalan Data (Spreadsheet ID) di dalam fail skrip Google (Code.gs) dan deploy semula.'
+                    );
+                    this.isOutdatedBackendWarningShown.set(true);
+                 }
+            } else {
+                // This indicates an older backend or other connection error
+                if (!this.isOutdatedBackendWarningShown()) {
+                    this.notificationSvc.show(
+                        'error', 
+                        'Backend Versi Lama Dikesan', 
+                        'Skrip Cloud anda mungkin versi lama atau terdapat ralat sambungan. Sila deploy semula versi terkini.'
+                    );
+                    this.isOutdatedBackendWarningShown.set(true);
+                }
+                console.warn("Could not get config. Backend might be outdated or unreachable.", e);
             }
-            console.warn("Backend is outdated, getConfig endpoint not found.");
         }
       } else {
         // If offline, clear capabilities and reset warning flag
         this.stateSvc.backendCapabilities.set([]);
         this.stateSvc.sheetNames.set(null);
+        this.stateSvc.spreadsheetId.set(null);
         this.isOutdatedBackendWarningShown.set(false);
       }
     } else {
       this.stateSvc.isCloudConnected.set(false);
       this.stateSvc.backendCapabilities.set([]);
       this.stateSvc.sheetNames.set(null);
+      this.stateSvc.spreadsheetId.set(null);
       this.isOutdatedBackendWarningShown.set(false);
     }
   }
 
   navigate(tab: ActiveTab): void {
     this.activeTab.set(tab);
+  }
+
+  showFeedbackModal(): void {
+    this.isFeedbackModalVisible.set(true);
+  }
+
+  hideFeedbackModal(): void {
+    this.isFeedbackModalVisible.set(false);
+  }
+
+  confirmLogout(): void {
+    this.stateSvc.isLogoutConfirmVisible.set(true);
+  }
+
+  cancelLogout(): void {
+    this.stateSvc.isLogoutConfirmVisible.set(false);
+  }
+
+  logout(): void {
+    if (this.stateSvc.isSimulationMode()) {
+      this.simulationSvc.stopSimulation();
+    }
+    this.stateSvc.logoutResponder(); // Clears responder-specific state
+    this.stateSvc.activeProgram.set(null);
+    this.stateSvc.isCloudConnected.set(false);
+    this.stateSvc.isLoggedIn.set(false);
+    this.stateSvc.isLogoutConfirmVisible.set(false);
+    this.notificationSvc.show('logout', 'Sesi Ditamatkan', 'Anda telah log keluar. Sila pilih mod untuk sambung semula.');
   }
 }

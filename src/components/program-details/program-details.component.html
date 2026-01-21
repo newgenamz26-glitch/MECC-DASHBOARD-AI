@@ -1,0 +1,228 @@
+<div class="fixed inset-0 bg-black/60 z-[9990] flex items-center justify-center p-4" (click)="close.emit()">
+    <div class="bg-sky-50 w-full max-w-lg max-h-[90vh] rounded-3xl shadow-2xl flex flex-col" (click)="$event.stopPropagation()">
+        <!-- Header -->
+        <div class="p-5 border-b border-sky-200 flex justify-between items-center flex-shrink-0">
+            <div>
+                <h3 class="font-bold text-sky-800 text-lg leading-tight">Maklumat Lanjut Program</h3>
+                <p class="text-xs text-slate-500 font-semibold">{{ program().namaprogram }}</p>
+            </div>
+            <button (click)="close.emit()" class="p-2 bg-sky-100 rounded-full text-sky-600 hover:bg-sky-200 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        
+        <!-- Tab Navigation -->
+        <div class="p-3 bg-white/50 border-b border-sky-200 flex-shrink-0">
+            <div class="grid grid-cols-3 gap-2">
+                <button (click)="changeTab('cekpoint')" class="px-3 py-2 text-xs font-bold rounded-lg transition-colors" [class.bg-sky-600]="activeTab() === 'cekpoint'" [class.text-white]="activeTab() === 'cekpoint'" [class.text-slate-500]="activeTab() !== 'cekpoint'" [class.hover:bg-sky-100]="activeTab() !== 'cekpoint'">
+                    CEKPOINT
+                </button>
+                <button (click)="changeTab('ambulan')" class="px-3 py-2 text-xs font-bold rounded-lg transition-colors" [class.bg-sky-600]="activeTab() === 'ambulan'" [class.text-white]="activeTab() === 'ambulan'" [class.text-slate-500]="activeTab() !== 'ambulan'" [class.hover:bg-sky-100]="activeTab() !== 'ambulan'">
+                    AMBULAN
+                </button>
+                <button (click)="changeTab('lain')" class="px-3 py-2 text-xs font-bold rounded-lg transition-colors" [class.bg-sky-600]="activeTab() === 'lain'" [class.text-white]="activeTab() === 'lain'" [class.text-slate-500]="activeTab() !== 'lain'" [class.hover:bg-sky-100]="activeTab() !== 'lain'">
+                    MAKLUMAT LAIN
+                </button>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="p-5 overflow-y-auto space-y-4" #formContainer>
+            @switch (activeTab()) {
+                @case ('cekpoint') {
+                    <h4 class="font-bold text-sky-800">{{ editingDetail() ? 'Kemaskini Cekpoint' : 'Tambah Cekpoint Baru' }}</h4>
+                    <form [formGroup]="checkpointForm" (ngSubmit)="handleFormSubmit('Cekpoint')" class="space-y-3 p-4 bg-white rounded-xl border border-sky-100">
+                         <input formControlName="name" type="text" placeholder="Nama Cekpoint" class="w-full p-3 bg-slate-50 border-0 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-sky-500 outline-none">
+                         <div class="relative">
+                            <input formControlName="location" type="text" placeholder="Lokasi Cekpoint"
+                                class="w-full p-3 bg-slate-50 border-0 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-sky-500 outline-none"
+                                (focus)="showLocationSuggestions.set(true)"
+                                (blur)="onLocationInputBlur()"
+                                (input)="onLocationInput($event)"
+                                autocomplete="off">
+                            @if (showLocationSuggestions() && locationSuggestions().length > 0) {
+                                <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-sky-200 rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto">
+                                    @for (location of locationSuggestions(); track location) {
+                                        <button type="button" (click)="selectLocationSuggestion(location)" class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-sky-50 transition-colors">
+                                            {{ location }}
+                                        </button>
+                                    }
+                                </div>
+                            }
+                         </div>
+                         <div class="grid grid-cols-2 gap-3">
+                            <input formControlName="pic" type="text" placeholder="PIC (Person in Charge)" class="w-full p-3 bg-slate-50 border-0 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-sky-500 outline-none">
+                            <input formControlName="callSign" type="text" placeholder="Call Sign (cth: CP1)" class="w-full p-3 bg-slate-50 border-0 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-sky-500 outline-none">
+                         </div>
+                         <input formControlName="crew" type="text" placeholder="Krew Bertugas (cth: Pasukan A)" class="w-full p-3 bg-slate-50 border-0 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-sky-500 outline-none">
+                         <div class="flex justify-end items-center gap-3">
+                            @if(editingDetail()) {
+                                <button type="button" (click)="cancelEdit()" class="text-sm font-bold text-slate-500 hover:text-slate-700">
+                                    Batal
+                                </button>
+                            }
+                            <button type="submit" [disabled]="checkpointForm.invalid || isSubmitting()" class="flex items-center justify-center gap-2 text-sm font-bold bg-sky-500 text-white px-5 py-2.5 rounded-lg hover:bg-sky-600 transition-colors disabled:bg-slate-300 active:scale-95">
+                                @if(isSubmitting()) {
+                                    <svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                                    <span>{{ editingDetail() ? 'Menyimpan...' : 'Menambah...' }}</span>
+                                } @else {
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                                    <span>{{ editingDetail() ? 'Simpan Perubahan' : 'Simpan Cekpoint' }}</span>
+                                }
+                            </button>
+                         </div>
+                    </form>
+                    
+                    <h4 class="font-bold text-sky-800 pt-2">Senarai Cekpoint</h4>
+                    @if (isLoading()) {
+                        <app-loading-indicator message="Memuat turun data..."></app-loading-indicator>
+                    } @else if (checkpoints().length === 0) {
+                        <p class="text-xs text-slate-400 text-center py-4">Tiada rekod cekpoint.</p>
+                    } @else {
+                        <div class="space-y-2">
+                        @for(cp of checkpoints(); track cp.id) {
+                            <div class="bg-white p-3 rounded-lg border border-sky-100">
+                                <div class="flex justify-between items-start gap-2">
+                                    <p class="font-bold text-sm text-slate-700">{{ cp.name }}</p>
+                                    <div class="flex-shrink-0 flex items-center gap-2">
+                                        @if (cp.callSign) {
+                                            <span class="text-xs font-mono text-amber-700 bg-amber-100 px-2 py-0.5 rounded">{{ cp.callSign }}</span>
+                                        }
+                                        <button (click)="startEdit(cp)" class="text-sky-600 hover:text-sky-800 disabled:text-slate-300" [disabled]="isSubmitting()">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-slate-500 flex items-center gap-1.5 mt-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                                    <span>{{ cp.location }}</span>
+                                </div>
+                                @if (cp.pic) {
+                                     <div class="text-xs text-slate-500 flex items-center gap-1.5 mt-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                        <span class="font-medium text-slate-600">PIC: {{ cp.pic }}</span>
+                                    </div>
+                                }
+                                @if (cp.crew) {
+                                     <div class="text-xs text-slate-500 flex items-center gap-1.5 mt-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                        <span class="font-medium text-slate-600">Krew: {{ cp.crew }}</span>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        </div>
+                    }
+                }
+                @case ('ambulan') {
+                    <h4 class="font-bold text-sky-800">{{ editingDetail() ? 'Kemaskini Ambulans' : 'Tambah Ambulans Baru' }}</h4>
+                    <form [formGroup]="ambulanceForm" (ngSubmit)="handleFormSubmit('Ambulan')" class="space-y-3 p-4 bg-white rounded-xl border border-sky-100">
+                         <input formControlName="callSign" type="text" placeholder="Call Sign" class="w-full p-3 bg-slate-50 border-0 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-sky-500 outline-none">
+                         <div class="relative">
+                            <input formControlName="vehicleNumber" type="text" placeholder="No. Pendaftaran Kenderaan"
+                                class="w-full p-3 bg-slate-50 border-0 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-sky-500 outline-none"
+                                (focus)="showVehicleNumberSuggestions.set(true)"
+                                (blur)="onVehicleNumberInputBlur()"
+                                (input)="onVehicleNumberInput($event)"
+                                autocomplete="off">
+                             @if (showVehicleNumberSuggestions() && vehicleNumberSuggestions().length > 0) {
+                                <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-sky-200 rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto">
+                                    @for (vn of vehicleNumberSuggestions(); track vn) {
+                                        <button type="button" (click)="selectVehicleNumberSuggestion(vn)" class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-sky-50 transition-colors">
+                                            {{ vn }}
+                                        </button>
+                                    }
+                                </div>
+                            }
+                         </div>
+                         <textarea formControlName="crew" rows="2" placeholder="Senarai Krew (cth: Pemandu Ali, PPK Abu)" class="w-full p-3 bg-slate-50 border-0 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-sky-500 outline-none"></textarea>
+                         <div class="flex justify-end items-center gap-3">
+                            @if(editingDetail()) {
+                                <button type="button" (click)="cancelEdit()" class="text-sm font-bold text-slate-500 hover:text-slate-700">
+                                    Batal
+                                </button>
+                            }
+                            <button type="submit" [disabled]="ambulanceForm.invalid || isSubmitting()" class="flex items-center justify-center gap-2 text-sm font-bold bg-sky-500 text-white px-5 py-2.5 rounded-lg hover:bg-sky-600 transition-colors disabled:bg-slate-300 active:scale-95">
+                                @if(isSubmitting()) {
+                                    <svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                                    <span>{{ editingDetail() ? 'Menyimpan...' : 'Menambah...' }}</span>
+                                } @else {
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                                    <span>{{ editingDetail() ? 'Simpan Perubahan' : 'Simpan Ambulans' }}</span>
+                                }
+                            </button>
+                         </div>
+                    </form>
+
+                    <h4 class="font-bold text-sky-800 pt-2">Senarai Ambulans</h4>
+                    @if (isLoading()) {
+                        <app-loading-indicator message="Memuat turun data..."></app-loading-indicator>
+                    } @else if (ambulances().length === 0) {
+                        <p class="text-xs text-slate-400 text-center py-4">Tiada rekod ambulans.</p>
+                    } @else {
+                         <div class="space-y-2">
+                        @for(amb of ambulances(); track amb.id) {
+                            <div class="bg-white p-3 rounded-lg border border-sky-100">
+                                <div class="flex justify-between items-start">
+                                    <p class="font-bold text-sm text-slate-700">{{ amb.callSign }}</p>
+                                    <div class="flex-shrink-0 flex items-center gap-2">
+                                        <p class="text-xs font-mono text-sky-600 bg-sky-100 px-2 py-0.5 rounded">{{ amb.vehicleNumber }}</p>
+                                        <button (click)="startEdit(amb)" class="text-sky-600 hover:text-sky-800 disabled:text-slate-300" [disabled]="isSubmitting()">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-slate-500 mt-1 whitespace-pre-wrap">{{ amb.crew }}</p>
+                            </div>
+                        }
+                        </div>
+                    }
+                }
+                @case ('lain') {
+                     <h4 class="font-bold text-sky-800">{{ editingDetail() ? 'Kemaskini Maklumat' : 'Tambah Maklumat Baru' }}</h4>
+                    <form [formGroup]="otherInfoForm" (ngSubmit)="handleFormSubmit('Lain')" class="space-y-3 p-4 bg-white rounded-xl border border-sky-100">
+                         <input formControlName="title" type="text" placeholder="Tajuk" class="w-full p-3 bg-slate-50 border-0 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-sky-500 outline-none">
+                         <textarea formControlName="details" rows="3" placeholder="Butiran maklumat..." class="w-full p-3 bg-slate-50 border-0 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-sky-500 outline-none"></textarea>
+                         <div class="flex justify-end items-center gap-3">
+                             @if(editingDetail()) {
+                                <button type="button" (click)="cancelEdit()" class="text-sm font-bold text-slate-500 hover:text-slate-700">
+                                    Batal
+                                </button>
+                            }
+                            <button type="submit" [disabled]="otherInfoForm.invalid || isSubmitting()" class="flex items-center justify-center gap-2 text-sm font-bold bg-sky-500 text-white px-5 py-2.5 rounded-lg hover:bg-sky-600 transition-colors disabled:bg-slate-300 active:scale-95">
+                                @if(isSubmitting()) {
+                                    <svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                                    <span>{{ editingDetail() ? 'Menyimpan...' : 'Menambah...' }}</span>
+                                } @else {
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                                    <span>{{ editingDetail() ? 'Simpan Perubahan' : 'Simpan Maklumat' }}</span>
+                                }
+                            </button>
+                         </div>
+                    </form>
+
+                    <h4 class="font-bold text-sky-800 pt-2">Senarai Maklumat</h4>
+                    @if (isLoading()) {
+                        <app-loading-indicator message="Memuat turun data..."></app-loading-indicator>
+                    } @else if (otherInfos().length === 0) {
+                        <p class="text-xs text-slate-400 text-center py-4">Tiada rekod maklumat lain.</p>
+                    } @else {
+                         <div class="space-y-2">
+                        @for(info of otherInfos(); track info.id) {
+                            <div class="bg-white p-3 rounded-lg border border-sky-100">
+                                <div class="flex justify-between items-start gap-2">
+                                    <p class="font-bold text-sm text-slate-700">{{ info.title }}</p>
+                                     <button (click)="startEdit(info)" class="text-sky-600 hover:text-sky-800 disabled:text-slate-300 flex-shrink-0" [disabled]="isSubmitting()">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    </button>
+                                </div>
+                                <p class="text-xs text-slate-500 mt-1 whitespace-pre-wrap">{{ info.details }}</p>
+                            </div>
+                        }
+                        </div>
+                    }
+                }
+            }
+        </div>
+    </div>
+</div>
