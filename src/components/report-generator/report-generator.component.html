@@ -1,0 +1,174 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="space-y-2">
+    <h3 class="text-[11px] font-black text-slate-500 uppercase tracking-widest">Penjana Laporan</h3>
+    <div class="bg-white p-6 rounded-[32px] shadow-sm border border-sky-50">
+        <h4 class="font-bold text-sky-800 text-base">Pilih Program</h4>
+        <p class="text-xs text-slate-400 mt-1">Pilih program untuk menjana laporan terperinci.</p>
+
+        @if (isLoadingPrograms()) {
+            <div class.mt-4><app-loading-indicator message="Memuat turun senarai program..." size="small"></app-loading-indicator></div>
+        } @else {
+            <select (change)="onProgramSelect($event)" class="mt-4 w-full p-3 bg-slate-50 border-0 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-sky-500 outline-none appearance-none">
+                <option value="">-- Sila Pilih Program --</option>
+                @for (prog of programs(); track prog.id) {
+                    <option [value]="prog.id">{{ prog.namaprogram }} ({{ getFormattedDate(prog.tarikh) }})</option>
+                }
+            </select>
+        }
+    </div>
+  </div>
+
+  <!-- Report Display -->
+  @if (selectedProgramId()) {
+    @if (isLoadingReport()) {
+        <div class="bg-white/50 rounded-[32px] border border-dashed border-sky-200">
+            <app-loading-indicator message="Menjana data laporan..."></app-loading-indicator>
+        </div>
+    } @else if (reportData(); as data) {
+        <div class="space-y-4">
+            <!-- Action Button -->
+            <button (click)="downloadPdf()" [disabled]="isGeneratingPdf()" class="w-full flex items-center justify-center gap-2 bg-emerald-500 text-white font-bold py-3 rounded-xl hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-200/50 active:scale-95 disabled:bg-slate-300">
+                @if(isGeneratingPdf()) {
+                    <svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                    <span>Menjana PDF...</span>
+                } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span>Jana Laporan PDF</span>
+                }
+            </button>
+            
+            <!-- Report Content for PDF -->
+            <div id="report-content" class="bg-white p-6 rounded-2xl shadow-sm">
+                <h1 class="text-2xl font-black text-center text-sky-800">Laporan Akhir Program</h1>
+                <h2 class="text-lg font-bold text-center text-slate-600">{{ data.program.namaprogram }}</h2>
+                <div class="my-6 border-b-2 border-dashed border-slate-200"></div>
+
+                <!-- Program Summary -->
+                <div class="space-y-2">
+                    <h3 class="text-base font-bold text-sky-700 border-b border-sky-200 pb-1 mb-2">Ringkasan Program</h3>
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                        <div class="font-bold text-slate-500">ID Program:</div> <div class="font-semibold text-slate-800">{{ data.program.id }}</div>
+                        <div class="font-bold text-slate-500">Tarikh:</div> <div class="font-semibold text-slate-800">{{ getFormattedDate(data.program.tarikh) }}</div>
+                        <div class="font-bold text-slate-500">Masa:</div> <div class="font-semibold text-slate-800">{{ getFormattedTime(data.program.masa) }}</div>
+                        <div class="font-bold text-slate-500">Lokasi:</div> <div class="font-semibold text-slate-800">{{ data.program.lokasi }}</div>
+                        <div class="font-bold text-slate-500">Status:</div> <div class="font-semibold text-slate-800">{{ data.program.status }}</div>
+                    </div>
+                </div>
+
+                <!-- Case Reports -->
+                <div class="mt-6 space-y-2">
+                    <h3 class="text-base font-bold text-sky-700 border-b border-sky-200 pb-1 mb-2">Laporan Kes (Jumlah: {{ data.cases.length }})</h3>
+                    @if (data.cases.length > 0) {
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-slate-50 text-xs text-slate-500 uppercase">
+                                <tr>
+                                    <th class="p-2">Masa</th>
+                                    <th class="p-2">Butiran</th>
+                                    <th class="p-2">Lokasi</th>
+                                    <th class="p-2">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (caseItem of data.cases; track caseItem.id) {
+                                    <tr class="border-b">
+                                        <td class="p-2 align-top font-mono text-xs">{{ getFormattedTime(caseItem.timestamp) }}</td>
+                                        <td class="p-2 align-top">{{ caseItem.details }}</td>
+                                        <td class="p-2 align-top">{{ caseItem.location }}</td>
+                                        <td class="p-2 align-top font-semibold" [class.text-emerald-600]="caseItem.status === 'Selesai'">{{ caseItem.status }}</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    } @else {
+                        <p class="text-sm text-slate-500 italic">Tiada kes dilaporkan untuk program ini.</p>
+                    }
+                </div>
+                
+                 <!-- Attendance -->
+                <div class="mt-6 space-y-2">
+                    <h3 class="text-base font-bold text-sky-700 border-b border-sky-200 pb-1 mb-2">Log Kehadiran (Jumlah: {{ data.attendance.length }})</h3>
+                     @if (data.attendance.length > 0) {
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-slate-50 text-xs text-slate-500 uppercase">
+                                <tr>
+                                    <th class="p-2">Nama Petugas</th>
+                                    <th class="p-2">Log Masuk</th>
+                                    <th class="p-2">Log Keluar</th>
+                                    <th class="p-2 text-center">Kes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (att of data.attendance; track att.nama + att.mula) {
+                                    <tr class="border-b">
+                                        <td class="p-2 align-top font-semibold">{{ att.nama }}</td>
+                                        <td class="p-2 align-top text-xs">{{ getFormattedDateTime(att.mula) }}</td>
+                                        <td class="p-2 align-top text-xs">{{ getFormattedDateTime(att.tamat) }}</td>
+                                        <td class="p-2 align-top text-center font-bold">{{ att.kes }}</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <p class="text-[10px] text-amber-700 bg-amber-50 p-2 rounded-md mt-2 italic">Nota: Data kehadiran adalah untuk program yang aktif secara global pada masa ini dan mungkin tidak khusus untuk program yang dipilih jika ia telah selesai.</p>
+                    } @else {
+                        <p class="text-sm text-slate-500 italic">Tiada rekod kehadiran ditemui.</p>
+                    }
+                </div>
+
+                 <!-- Checkpoints -->
+                <div class="mt-6 space-y-2">
+                    <h3 class="text-base font-bold text-sky-700 border-b border-sky-200 pb-1 mb-2">Aset Operasi: Cekpoint ({{ data.checkpoints.length }})</h3>
+                     @if (data.checkpoints.length > 0) {
+                        <div class="space-y-2">
+                           @for(cp of data.checkpoints; track cp.id) {
+                              <div class="p-2 border rounded-md bg-slate-50/50">
+                                <p class="font-bold text-slate-800 text-sm">{{cp.name}} <span class="text-xs font-mono text-amber-700">({{cp.callSign}})</span></p>
+                                <p class="text-xs text-slate-500">Lokasi: {{cp.location}}</p>
+                                <p class="text-xs text-slate-500">PIC: {{cp.pic}}</p>
+                                <p class="text-xs text-slate-500">Krew: {{cp.crew}}</p>
+                              </div>
+                           }
+                        </div>
+                    } @else {
+                        <p class="text-sm text-slate-500 italic">Tiada data cekpoint direkodkan.</p>
+                    }
+                </div>
+
+                 <!-- Ambulances -->
+                <div class="mt-6 space-y-2">
+                    <h3 class="text-base font-bold text-sky-700 border-b border-sky-200 pb-1 mb-2">Aset Operasi: Ambulans ({{ data.ambulances.length }})</h3>
+                     @if (data.ambulances.length > 0) {
+                        <div class="space-y-2">
+                           @for(amb of data.ambulances; track amb.id) {
+                              <div class="p-2 border rounded-md bg-slate-50/50">
+                                <p class="font-bold text-slate-800 text-sm">{{amb.callSign}} <span class="text-xs font-mono text-sky-700">({{amb.vehicleNumber}})</span></p>
+                                <p class="text-xs text-slate-500">Krew: {{amb.crew}}</p>
+                              </div>
+                           }
+                        </div>
+                    } @else {
+                        <p class="text-sm text-slate-500 italic">Tiada data ambulans direkodkan.</p>
+                    }
+                </div>
+                
+                <div class="mt-8 pt-4 border-t border-slate-200 text-center">
+                    <p class="text-xs text-slate-400">Laporan dijana oleh Sistem MECC AMAL v2.6 pada {{ getFormattedDateTime(data.generatedAt) }}</p>
+                </div>
+
+            </div>
+        </div>
+    }
+  } @else {
+    <div class="text-center py-8 bg-white/50 rounded-[32px] border border-dashed border-sky-200">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-sky-400 mb-2">
+            <path d="m15 12-4-9-4 9 4 3 4-3z"/>
+            <path d="M19.5 12.5 18 17l-1.5-4.5"/>
+            <path d="m15 12-1 5"/>
+            <path d="m4.5 12.5 1.5 4.5 L 7.5 12"/>
+            <path d="m9 12 1 5"/>
+        </svg>
+        <p class="text-sm font-bold text-slate-600">Sedia untuk Menjana Laporan</p>
+        <p class="text-xs text-slate-400 mt-1">Sila pilih satu program daripada senarai di atas.</p>
+    </div>
+  }
+</div>

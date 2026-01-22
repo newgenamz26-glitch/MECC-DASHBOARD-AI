@@ -15,8 +15,9 @@ import { ResponderDashboardComponent } from './components/responder-dashboard/re
 import { GpsService } from './services/gps.service';
 import { UserGuideComponent } from './components/user-guide/user-guide.component';
 import { LocalStorageService } from './services/local-storage.service';
+import { ReportGeneratorComponent } from './components/report-generator/report-generator.component';
 
-type ActiveTab = 'dashboard' | 'program' | 'settings';
+type ActiveTab = 'dashboard' | 'program' | 'settings' | 'report';
 
 const APP_VERSION = '2.6.0';
 const LAST_SEEN_VERSION_KEY = 'MECC_LAST_SEEN_VERSION_V1';
@@ -34,6 +35,7 @@ const LAST_SEEN_VERSION_KEY = 'MECC_LAST_SEEN_VERSION_V1';
     FeedbackFormComponent,
     ResponderDashboardComponent,
     UserGuideComponent,
+    ReportGeneratorComponent,
   ],
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
