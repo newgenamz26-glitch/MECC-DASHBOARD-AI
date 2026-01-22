@@ -125,17 +125,27 @@ export class ProgramSelectorComponent {
     }
   }
 
-  async setProgramStatus(program: Program, status: 'Aktif' | 'Belum Mula' | 'Selesai'): Promise<void> {
+  async setProgramStatus(program: Program, newStatus: 'Aktif' | 'Belum Mula' | 'Selesai'): Promise<void> {
     this.lockingProgramId.set(program.id);
     try {
-        const result = await this.apiSvc.setProgramStatus(program.id, status);
+        const result = await this.apiSvc.setProgramStatus(program.id, newStatus);
         if (result.success) {
-            const statusMap: Record<string, string> = {
-                'Aktif': 'diaktifkan',
-                'Belum Mula': 'dinyahaktifkan',
-                'Selesai': 'ditandakan sebagai selesai'
-            };
-            this.notificationSvc.show('info', 'Status Dikemaskini', `Program "${program.namaprogram}" telah ${statusMap[status]}.`);
+            let statusMessage = '';
+            const oldStatus = program.status || 'Belum Mula';
+
+            if (newStatus === 'Aktif') {
+                statusMessage = 'diaktifkan';
+            } else if (newStatus === 'Belum Mula' && oldStatus === 'Aktif') {
+                statusMessage = 'dinyahaktifkan';
+            } else if (newStatus === 'Belum Mula' && oldStatus === 'Selesai') {
+                statusMessage = 'diaktifkan semula (kini Belum Mula)';
+            } else if (newStatus === 'Selesai') {
+                statusMessage = 'ditandakan sebagai selesai';
+            } else {
+                statusMessage = `statusnya dikemaskini kepada ${newStatus}`;
+            }
+            
+            this.notificationSvc.show('info', 'Status Dikemaskini', `Program "${program.namaprogram}" telah ${statusMessage}.`);
             this.fetchPrograms(); 
         } else {
             throw new Error(result.message);

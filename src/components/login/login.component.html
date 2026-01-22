@@ -1,4 +1,23 @@
-<div class="flex flex-col items-center justify-center min-h-screen bg-sky-900 p-4 animate-fade-in-up">
+<div class="relative flex flex-col items-center justify-center min-h-screen bg-sky-900 p-4 animate-fade-in-up">
+  
+  <!-- GPS Status Indicator -->
+  <div class="absolute top-5 right-5 z-10">
+      <div class="flex items-center gap-1.5 bg-white/10 px-2 py-1.5 rounded-xl border border-white/20">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+               class="transition-colors flex-shrink-0"
+               [class.text-sky-400]="isGpsConnected()"
+               [class.text-red-500]="!isGpsConnected()"
+               [class.animate-pulse]="stateSvc.gpsStatus() === 'REQUESTING'">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle>
+          </svg>
+          <div>
+            <p class="text-[9px] font-black uppercase tracking-wider" [class.text-white]="isGpsConnected()" [class.text-red-400]="!isGpsConnected()">
+              {{ gpsStatusMessage() }}
+            </p>
+          </div>
+      </div>
+  </div>
+
   <div class="text-center mb-10">
     <h1 class="font-bold text-3xl text-white leading-tight">MECC AMAL <span class="text-xs bg-sky-700 px-2 py-0.5 rounded-full ml-1 align-middle">v2.6</span></h1>
     <p class="text-sm text-sky-300 uppercase tracking-widest font-bold mt-1">Respon Pintar Cloud</p>

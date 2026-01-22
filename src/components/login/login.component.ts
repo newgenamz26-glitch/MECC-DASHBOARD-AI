@@ -15,6 +15,18 @@ export class LoginComponent {
 
   isAboutVisible = signal(false);
 
+  gpsStatusMessage = computed(() => {
+    switch (this.stateSvc.gpsStatus()) {
+      case 'CONNECTED': return 'GPS OK';
+      case 'REQUESTING': return 'Mencari...';
+      case 'ERROR': return 'GPS Ralat';
+      case 'UNSUPPORTED': return 'GPS Tiada';
+      default: return 'GPS Putus';
+    }
+  });
+
+  isGpsConnected = computed(() => this.stateSvc.gpsStatus() === 'CONNECTED');
+
   showAboutModal(): void {
     this.isAboutVisible.set(true);
   }
