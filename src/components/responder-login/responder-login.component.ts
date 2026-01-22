@@ -7,7 +7,6 @@ import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-responder-login',
-  standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './responder-login.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

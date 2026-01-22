@@ -10,7 +10,6 @@ interface GuideStep {
 
 @Component({
   selector: 'app-user-guide',
-  standalone: true,
   imports: [CommonModule],
   templateUrl: './user-guide.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

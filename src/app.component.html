@@ -20,7 +20,7 @@
   <!-- Header -->
   <nav class="bg-sky-900 text-white p-5 sticky z-50 shadow-md flex justify-between items-center rounded-b-[30px]" [class.top-0]="!stateSvc.isSimulationMode()" [class.top-[22px]]="stateSvc.isSimulationMode()">
       <div>
-          <h1 class="font-bold text-lg leading-tight">MECC AMAL <span class="text-[10px] bg-sky-700 px-2 py-0.5 rounded-full ml-1">v2.6</span></h1>
+          <h1 class="font-bold text-lg leading-tight">MECC AMAL <span class="text-[10px] bg-sky-700 px-2 py-0.5 rounded-full ml-1">v{{ appVersion }}</span></h1>
           @if(stateSvc.loggedInResponder(); as responder) {
             <p class="text-[10px] text-sky-300 font-semibold">{{ responder.name }} ({{ responder.role }})</p>
           } @else {
@@ -82,6 +82,26 @@
         @case ('settings') { <app-settings></app-settings> }
       }
   </main>
+
+  <!-- New Version Notification Banner -->
+  @if (isNewVersionAvailable()) {
+    <div class="fixed bottom-24 left-1/2 -translate-x-1/2 w-[95%] max-w-md z-50 p-4 rounded-2xl shadow-2xl bg-gradient-to-tr from-sky-600 to-teal-500 text-white animate-fade-in-up">
+      <div class="flex items-start gap-4">
+        <div class="bg-white/20 p-2 rounded-full mt-1">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
+        </div>
+        <div class="flex-grow">
+          <h4 class="font-bold">Versi Baru Tersedia!</h4>
+          <p class="text-sm text-white/90 mt-1">
+            Sistem telah dikemaskini kepada v{{ appVersion }} dengan fungsi dan penambahbaikan baru.
+          </p>
+        </div>
+        <button (click)="dismissVersionNotification()" class="p-2 -mt-1 -mr-1 text-white/70 hover:text-white transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+    </div>
+  }
 
   <!-- Bottom Navigation -->
   <div class="fixed bottom-0 left-0 w-full bg-white/80 backdrop-blur-xl border-t border-sky-50 flex justify-around p-5 z-50 rounded-t-[32px] shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.05)]">

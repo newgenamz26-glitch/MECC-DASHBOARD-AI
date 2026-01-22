@@ -14,8 +14,12 @@ import { FeedbackFormComponent } from './components/feedback-form/feedback-form.
 import { ResponderDashboardComponent } from './components/responder-dashboard/responder-dashboard.component';
 import { GpsService } from './services/gps.service';
 import { UserGuideComponent } from './components/user-guide/user-guide.component';
+import { LocalStorageService } from './services/local-storage.service';
 
 type ActiveTab = 'dashboard' | 'program' | 'settings';
+
+const APP_VERSION = '2.6.0';
+const LAST_SEEN_VERSION_KEY = 'MECC_LAST_SEEN_VERSION_V1';
 
 @Component({
   selector: 'app-root',
@@ -40,10 +44,13 @@ export class AppComponent {
   private notificationSvc = inject(NotificationService);
   private simulationSvc = inject(SimulationService);
   private gpsSvc = inject(GpsService);
+  private localStorageSvc = inject(LocalStorageService);
   
   activeTab = signal<ActiveTab>('dashboard');
   isOutdatedBackendWarningShown = signal(false);
   isFeedbackModalVisible = signal(false);
+  isNewVersionAvailable = signal(false);
+  readonly appVersion = APP_VERSION;
   
   gpsStatusMessage = computed(() => {
     switch (this.stateSvc.gpsStatus()) {
@@ -68,6 +75,7 @@ export class AppComponent {
   constructor() {
     this.gpsSvc.startWatching(); // Start GPS tracking immediately on app load.
     this.apiSvc.primeSuggestionCache(); // Prime cache on startup regardless of login state.
+    this.checkAppVersion();
 
     effect((onCleanup) => {
         const loggedIn = this.stateSvc.isLoggedIn();
@@ -93,6 +101,18 @@ export class AppComponent {
         this.stateSvc.initialTab.set(null); // Consume it
       }
     });
+  }
+
+  private checkAppVersion(): void {
+    const lastSeenVersion = this.localStorageSvc.getItem<string>(LAST_SEEN_VERSION_KEY);
+    if (lastSeenVersion !== APP_VERSION) {
+      this.isNewVersionAvailable.set(true);
+    }
+  }
+  
+  dismissVersionNotification(): void {
+    this.localStorageSvc.setItem(LAST_SEEN_VERSION_KEY, APP_VERSION);
+    this.isNewVersionAvailable.set(false);
   }
 
   async checkCloudStatus() {

@@ -6,7 +6,6 @@ import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicato
 
 @Component({
   selector: 'app-ai-assistant',
-  standalone: true,
   imports: [CommonModule, LoadingIndicatorComponent],
   templateUrl: './ai-assistant.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

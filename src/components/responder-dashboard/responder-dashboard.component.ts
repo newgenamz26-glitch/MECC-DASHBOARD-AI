@@ -8,7 +8,6 @@ import { AiAssistantComponent } from '../ai-assistant/ai-assistant.component';
 
 @Component({
   selector: 'app-responder-dashboard',
-  standalone: true,
   imports: [CommonModule, LoadingIndicatorComponent, AiAssistantComponent],
   templateUrl: './responder-dashboard.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

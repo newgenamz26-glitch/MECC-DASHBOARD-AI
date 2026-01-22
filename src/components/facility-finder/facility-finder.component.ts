@@ -6,7 +6,6 @@ import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicato
 
 @Component({
   selector: 'app-facility-finder',
-  standalone: true,
   imports: [CommonModule, LoadingIndicatorComponent],
   templateUrl: './facility-finder.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
