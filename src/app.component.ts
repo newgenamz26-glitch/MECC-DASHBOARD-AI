@@ -13,6 +13,7 @@ import { SimulationService } from './services/simulation.service';
 import { FeedbackFormComponent } from './components/feedback-form/feedback-form.component';
 import { ResponderDashboardComponent } from './components/responder-dashboard/responder-dashboard.component';
 import { GpsService } from './services/gps.service';
+import { UserGuideComponent } from './components/user-guide/user-guide.component';
 
 type ActiveTab = 'dashboard' | 'program' | 'settings';
 
@@ -28,6 +29,7 @@ type ActiveTab = 'dashboard' | 'program' | 'settings';
     ResponderLoginComponent,
     FeedbackFormComponent,
     ResponderDashboardComponent,
+    UserGuideComponent,
   ],
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

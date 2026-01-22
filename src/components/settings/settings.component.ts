@@ -1,7 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { CommonModule, JsonPipe } from '@angular/common';
-import { DomSanitizer, SafeResourceUrl, SafeHtml } from '@angular/platform-browser';
 import { StateService } from '../../services/state.service';
 import { ApiService } from '../../services/api.service';
 import { NotificationService } from '../../services/notification.service';
@@ -9,9 +8,6 @@ import { SimulationService } from '../../services/simulation.service';
 import { Program } from '../../models';
 import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicator.component';
 import { GpsService } from '../../services/gps.service';
-import { UserGuideService } from '../../services/user-guide.service';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 interface Feature {
   title: string;
@@ -32,9 +28,7 @@ export class SettingsComponent {
   private notificationSvc = inject(NotificationService);
   private simulationSvc = inject(SimulationService);
   private gpsSvc = inject(GpsService);
-  private userGuideSvc = inject(UserGuideService);
   private fb: FormBuilder = inject(FormBuilder);
-  private sanitizer = inject(DomSanitizer);
 
   isBackendSetupVisible = signal(false);
   isProgramFormVisible = signal(false);
@@ -60,14 +54,6 @@ export class SettingsComponent {
 
   isAddingSampleData = signal(false);
   isSampleDataConfirmVisible = signal(false);
-
-  // User Guide Signals
-  isGeneratingGuide = signal(false);
-  isUserGuideVisible = signal(false);
-  userGuideHtml = signal<string>('');
-  sanitizedUserGuideHtml = computed<SafeHtml>(() => {
-    return this.sanitizer.bypassSecurityTrustHtml(this.userGuideHtml());
-  });
 
   simulationData = this.simulationSvc.exportedData;
 
@@ -525,62 +511,7 @@ export class SettingsComponent {
   }
 
   openUserGuide(): void {
-    this.userGuideHtml.set(this.userGuideSvc.generateGuideHtml(true));
-    this.isUserGuideVisible.set(true);
-  }
-
-  closeUserGuide(): void {
-    this.isUserGuideVisible.set(false);
-    this.userGuideHtml.set('');
-  }
-
-  async generateAndDownloadPdf(): Promise<void> {
-    this.isGeneratingGuide.set(true);
-    this.notificationSvc.show('info', 'Menjana PDF...', 'Sila tunggu, proses ini mungkin mengambil masa beberapa saat.');
-    
-    // Use a non-interactive version of HTML for PDF generation
-    const guideHtml = this.userGuideSvc.generateGuideHtml(false);
-
-    try {
-      const container = document.createElement('div');
-      container.style.position = 'absolute';
-      container.style.left = '-9999px';
-      container.style.top = '0';
-      container.style.width = '800px';
-      container.innerHTML = guideHtml;
-      document.body.appendChild(container);
-
-      const canvas = await html2canvas(container, { scale: 2, useCORS: true, logging: false });
-      document.body.removeChild(container);
-
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgData = canvas.toDataURL('image/png');
-      const imgProps = pdf.getImageProperties(imgData);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      
-      let heightLeft = pdfHeight;
-      let position = 0;
-      const pageHeight = pdf.internal.pageSize.getHeight();
-
-      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft > 0) {
-        position = -pageHeight * (pdf.internal.pages.length - 1);
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-        heightLeft -= pageHeight;
-      }
-      
-      pdf.save(`Panduan_Pengguna_MECC_AMAL_v2.6.pdf`);
-    } catch (e) {
-      console.error('Failed to generate PDF:', e);
-      const msg = e instanceof Error ? e.message : 'Ralat tidak diketahui.';
-      this.notificationSvc.show('error', 'Gagal Menjana PDF', msg);
-    } finally {
-      this.isGeneratingGuide.set(false);
-    }
+    this.stateSvc.isUserGuideVisible.set(true);
   }
 
   formatDate(dateString?: string): string {

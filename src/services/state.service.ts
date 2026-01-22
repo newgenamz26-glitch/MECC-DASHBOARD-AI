@@ -41,6 +41,7 @@ export class StateService {
   isSimulationMode = signal<boolean>(this.localStorageSvc.getItem<boolean>(MECC_SIMULATION_MODE_KEY) || false);
   initialTab = signal<ActiveTab | null>(null);
   isLogoutConfirmVisible = signal(false);
+  isUserGuideVisible = signal(false);
 
   // GPS State
   gpsStatus = signal<GpsStatus>('IDLE');

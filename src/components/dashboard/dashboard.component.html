@@ -61,12 +61,8 @@
         <h3 class="text-[11px] font-black text-slate-500 uppercase tracking-widest">Maklumat Operasi</h3>
       </div>
       @if(isLoadingDetails()) {
-        <div class="bg-white p-6 rounded-[32px] shadow-sm border border-sky-50 flex items-center justify-center gap-3 text-sm font-semibold text-slate-500">
-            <svg class="animate-spin h-5 w-5 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span>Memuat turun maklumat operasi...</span>
+        <div class="bg-white p-6 rounded-[32px] shadow-sm border border-sky-50">
+            <app-loading-indicator message="Memuat turun maklumat operasi..." size="small"></app-loading-indicator>
         </div>
       } @else if (errorDetails()) {
         <div class="bg-red-50 text-red-800 p-4 rounded-2xl border border-red-200 text-xs shadow-sm">
@@ -155,12 +151,8 @@
       </div>
 
       @if (isLoadingCases() && caseReports().length === 0) {
-        <div class="bg-white p-6 rounded-[32px] shadow-sm border border-sky-50 flex items-center justify-center gap-3 text-sm font-semibold text-slate-500">
-            <svg class="animate-spin h-5 w-5 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span>Memuat turun laporan kes...</span>
+        <div class="bg-white p-6 rounded-[32px] shadow-sm border border-sky-50">
+            <app-loading-indicator message="Memuat turun laporan kes..."></app-loading-indicator>
         </div>
       } @else if (errorCases()) {
         <p class="text-xs text-red-500 text-center py-8 italic bg-red-50/50 rounded-[32px] border border-dashed border-red-200">{{ errorCases() }}</p>
@@ -272,12 +264,8 @@
       </div>
       <div class="space-y-3">
         @if (isLoading() && !attendanceList().length) {
-          <div class="bg-white p-6 rounded-[32px] shadow-sm border border-sky-50 flex items-center justify-center gap-3 text-sm font-semibold text-slate-500">
-              <svg class="animate-spin h-5 w-5 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <span>Menyemak data Cloud...</span>
+          <div class="bg-white p-6 rounded-[32px] shadow-sm border border-sky-50">
+            <app-loading-indicator message="Menyemak data Cloud..."></app-loading-indicator>
           </div>
         } @else if (error()) {
           <p class="text-xs text-red-500 text-center py-8 italic bg-red-50/50 rounded-[32px] border border-dashed border-red-200">{{ error() }}</p>
