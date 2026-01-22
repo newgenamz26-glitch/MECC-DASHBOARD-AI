@@ -27,315 +27,295 @@
             </button>
         </div>
         <div class="mt-4">
-            <button (click)="openProgramListModal()" [disabled]="!stateSvc.isCloudConnected() && !stateSvc.isSimulationMode()" class="w-full text-center text-sky-700 text-sm font-bold py-3 hover:bg-sky-50 rounded-xl transition-colors border border-sky-200 bg-sky-50/50 disabled:bg-slate-100 disabled:text-slate-400">
-                Papar Senarai Program Penuh
+            <button (click)="openProgramListModal()" [disabled]="!stateSvc.isCloudConnected() && !stateSvc.isSimulationMode()" class="w-full text-center text-sky-700 text-sm font-bold py-3 hover:bg-sky-50 rounded-xl transition-colors border border-sky-200 bg-sky-50/50 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed">
+                Urus & Aktifkan Program Sedia Ada
             </button>
         </div>
 
-        @if (isCheckingNextId() || nextCloudId()) {
-            <div class="mt-4 pt-4 border-t border-slate-100">
-                <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">ID Cloud Seterusnya</label>
-                @if (isCheckingNextId()) {
-                    <div class="mt-1">
-                        <app-loading-indicator size="small" message="Menyemak ID dari Cloud..."></app-loading-indicator>
-                    </div>
-                } @else if (nextCloudId()) {
-                    <input type="text" [value]="nextCloudId()" readonly class="w-full mt-1 p-3 bg-slate-100 border-0 rounded-xl text-sm font-semibold text-slate-500 focus:ring-0 outline-none cursor-not-allowed">
-                }
-            </div>
-        }
-
-        @if (!stateSvc.isCloudConnected() && !stateSvc.isSimulationMode()) {
-             <p class="text-center text-xs text-amber-600 mt-3 bg-amber-50 p-2 rounded-lg border border-amber-100">Sila sambung ke Cloud atau aktifkan mod simulasi untuk mengurus program.</p>
-        }
-
-        @if (isProgramFormVisible() && (stateSvc.isCloudConnected() || stateSvc.isSimulationMode())) {
-            <div class="mt-4 pt-4 border-t border-slate-100 space-y-4">
-                <form [formGroup]="programForm" (ngSubmit)="saveProgram()">
-                    <div>
-                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">ID Program</label>
-                        <div class="mt-1">
-                            <input type="text" [value]="programId()" readonly class="w-full p-3 bg-slate-100 border-0 rounded-xl text-sm font-semibold text-slate-500 focus:ring-0 outline-none cursor-not-allowed">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Nama Program</label>
-                        <input formControlName="name" type="text" placeholder="Nama Program" class="w-full p-3 mt-1 bg-slate-50 border-0 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-sky-500 outline-none">
-                    </div>
-                     <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Tarikh</label>
-                            <input formControlName="date" type="date" class="w-full p-3 mt-1 bg-slate-50 border-0 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-sky-500 outline-none">
-                        </div>
-                        <div>
-                           <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Masa</label>
-                           <input formControlName="time" type="time" class="w-full p-3 mt-1 bg-slate-50 border-0 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-sky-500 outline-none">
-                        </div>
-                    </div>
-                     <div>
-                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Lokasi</label>
-                        <input formControlName="location" type="text" placeholder="Lokasi Program" class="w-full p-3 mt-1 bg-slate-50 border-0 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-sky-500 outline-none">
-                    </div>
-
-                    <div class="flex justify-end pt-2">
-                        <button type="submit" [disabled]="programForm.invalid" class="bg-sky-600 text-white text-sm font-black py-3 px-6 rounded-xl disabled:bg-slate-300 active:scale-95 transition-transform shadow-lg shadow-sky-200/50 disabled:shadow-none">
-                            {{ stateSvc.isSimulationMode() ? 'CIPTA SIMULasi' : 'SIMPAN KE CLOUD' }}
-                        </button>
-                    </div>
-                </form>
-            </div>
+        @if (isProgramFormVisible()) {
+          <div class="mt-4 pt-4 border-t border-slate-100 animate-fade-in-up">
+            <form [formGroup]="programForm" (ngSubmit)="saveProgram()" class="space-y-3">
+                <p class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">ID Program: <span class="font-mono text-sky-600">{{ programId() }}</span></p>
+                <input formControlName="name" type="text" placeholder="Nama Program" class="w-full p-3 bg-slate-50 border-0 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-sky-500 outline-none">
+                <div class="grid grid-cols-2 gap-2">
+                    <input formControlName="date" type="date" class="w-full p-3 bg-slate-50 border-0 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-sky-500 outline-none">
+                    <input formControlName="time" type="time" class="w-full p-3 bg-slate-50 border-0 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-sky-500 outline-none">
+                </div>
+                <input formControlName="location" type="text" placeholder="Lokasi Program" class="w-full p-3 bg-slate-50 border-0 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-sky-500 outline-none">
+                <div class="flex justify-end pt-2">
+                    <button type="submit" [disabled]="programForm.invalid" class="bg-sky-500 text-white text-sm font-bold py-2.5 px-6 rounded-lg hover:bg-sky-600 transition-colors disabled:bg-slate-300">
+                        Simpan Program
+                    </button>
+                </div>
+            </form>
+          </div>
         }
     </div>
 
-     <!-- Advanced Configuration (Collapsible) -->
+    <!-- Cloud Settings -->
     <div class="bg-white p-6 rounded-[32px] shadow-sm border border-sky-50">
-        <div (click)="toggleConfigVisibility()" class="flex justify-between items-center cursor-pointer">
+        <div class="flex justify-between items-center">
             <div>
-                <h4 class="font-bold text-sky-800 text-base">Konfigurasi & Diagnostik</h4>
-                <p class="text-xs text-slate-400 mt-1">Urus sambungan Cloud & sistem.</p>
+                <h4 class="font-bold text-sky-800 text-base">Tetapan Cloud</h4>
+                <p class="text-xs text-slate-400 mt-1">Sambungkan aplikasi ke pangkalan data Google Sheets anda.</p>
             </div>
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 transition-transform duration-300" [class.rotate-180]="isConfigVisible()">
-                <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
+            <button (click)="toggleConfigVisibility()" class="p-2 bg-sky-100 rounded-full text-sky-600 hover:bg-sky-200 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform duration-300" [class.rotate-180]="isConfigVisible()">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </button>
         </div>
 
         @if (isConfigVisible()) {
-            <div class="mt-4 pt-4 border-t border-slate-100 space-y-6">
-                <!-- Backend Settings Section -->
-                <div class="space-y-2">
-                    <div class="flex justify-between items-center">
-                        <h5 class="font-bold text-sky-700 text-sm">Sambungan Cloud</h5>
-                         @if (stateSvc.isSimulationMode()) {
-                             <span class="text-xs font-black px-2.5 py-1 rounded-full border bg-amber-100 text-amber-700 border-amber-200">SIMULASI</span>
-                         } @else if (stateSvc.isCloudConnected()) {
-                            <span class="text-xs font-black px-2.5 py-1 rounded-full border bg-sky-50 text-sky-600 border-sky-200">DALAM TALIAN</span>
-                        } @else {
-                            <span class="text-xs font-black px-2.5 py-1 rounded-full border bg-red-50 text-red-600 border-red-200">LUAR TALIAN</span>
-                        }
+            <div class="mt-4 pt-4 border-t border-slate-100 space-y-4">
+                @if (stateSvc.isCloudConnected()) {
+                    <div class="bg-emerald-50 text-emerald-800 p-4 rounded-xl border border-emerald-200 text-sm font-semibold flex items-center gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        <span>Cloud Aktif. Sistem berfungsi dengan data langsung.</span>
                     </div>
-                    <div class="pt-2 space-y-3" [class.opacity-50]="stateSvc.isSimulationMode()">
-                        <button (click)="testConnection()" [disabled]="!stateSvc.gasUrl() || isTesting() || stateSvc.isSimulationMode()" class="w-full bg-sky-600 text-white p-4 rounded-2xl font-black text-xs shadow-lg shadow-sky-100 active:scale-95 transition-all disabled:bg-slate-300 disabled:shadow-none">
-                            <div class="flex items-center justify-center gap-2">
-                                <svg [class.animate-spin]="isTesting()" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                                <span>{{ isTesting() ? 'MENGUJI...' : 'UJI SAMBUNGAN' }}</span>
-                            </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button (click)="openDatabaseSheet()" class="w-full bg-sky-50 text-sky-700 py-3 rounded-xl border border-sky-100 font-bold text-xs hover:bg-sky-100 transition-colors">Buka Pangkalan Data</button>
+                        <button (click)="testConnection()" [disabled]="isTesting()" class="w-full bg-sky-50 text-sky-700 py-3 rounded-xl border border-sky-100 font-bold text-xs hover:bg-sky-100 transition-colors disabled:opacity-50">
+                            {{ isTesting() ? 'Menguji...' : 'Uji Sambungan' }}
                         </button>
-                        <button (click)="toggleBackendSetup()" class="w-full text-center text-sky-700 text-xs font-bold py-2 hover:bg-sky-50 rounded-lg transition-colors" [disabled]="stateSvc.isSimulationMode()">
-                            {{ isBackendSetupVisible() ? 'Tutup Tetapan URL' : 'Urus URL' }}
-                        </button>
+                        <button (click)="resetCloud()" class="col-span-2 w-full bg-rose-50 text-rose-700 py-3 rounded-xl border border-rose-100 font-bold text-xs hover:bg-rose-100 transition-colors">Reset Sambungan Cloud</button>
                     </div>
-                    @if (isBackendSetupVisible() && !stateSvc.isSimulationMode()) {
-                        <div class="mt-4 pt-4 border-t border-slate-100 space-y-3">
-                            <form [formGroup]="backendForm" (ngSubmit)="verifyCloud()">
-                                <div>
-                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">URL Google Script</label>
-                                    <input type="text" formControlName="url" placeholder="Masukkan URL Script Cloud" class="w-full p-4 mt-1 bg-slate-50 border-0 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-sky-500 outline-none" [readOnly]="stateSvc.isCloudConnected()">
-                                </div>
-                                @if (!stateSvc.isCloudConnected()) {
-                                    <button type="submit" [disabled]="isVerifying() || backendForm.invalid" class="w-full bg-sky-600 text-white p-4 rounded-2xl font-black text-xs shadow-lg shadow-sky-100 active:scale-95 transition-all disabled:bg-slate-300 disabled:shadow-none">
-                                        {{ isVerifying() ? 'Mengesahkan...' : 'SAHKAN' }}
-                                    </button>
-                                } @else {
-                                    <button type="button" (click)="resetCloud()" class="w-full bg-slate-600 text-white p-4 rounded-2xl font-black text-xs shadow-lg shadow-slate-200 active:scale-95 transition-all">
-                                        RESET
-                                    </button>
-                                }
-                            </form>
-                        </div>
-                    }
-                </div>
-                
-                <!-- Diagnostics Section -->
-                <div class="space-y-2">
-                    <h5 class="font-bold text-sky-700 text-sm">Diagnostik Sistem</h5>
-                    <div class="pt-2 space-y-3" [class.opacity-50]="stateSvc.isSimulationMode()">
-                        <button (click)="validateSheetStructure()" [disabled]="!stateSvc.isCloudConnected() || isCheckingStructure() || stateSvc.isSimulationMode()" class="w-full bg-amber-500 text-white p-4 rounded-2xl font-black text-xs shadow-lg shadow-amber-100/50 active:scale-95 transition-all disabled:bg-slate-300 disabled:shadow-none">
-                            <div class="flex items-center justify-center gap-2">
-                                <svg [class.animate-spin]="isCheckingStructure()" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 6.5C15.5 5.26 14.53 4 13.06 4H6.52C5.1 4 4.07 5.26 4.07 6.5V17.5c0 1.24 1.03 2.5 2.45 2.5h8.51c1.42 0 2.47-1.26 2.47-2.5v-3.5"/><path d="m14 10 3-3-3-3"/><path d="M17 7H9"/><path d="m14 14 3-3-3-3"/><path d="M17 11H9"/></svg>
-                                <span>{{ isCheckingStructure() ? 'MENYEMAK...' : 'SEMAK SEMUA HELAIAN' }}</span>
-                            </div>
-                        </button>
-                         <button (click)="showConfigInfo()" [disabled]="!stateSvc.isCloudConnected() || stateSvc.isSimulationMode()" class="w-full bg-slate-500 text-white p-4 rounded-2xl font-black text-xs shadow-lg shadow-slate-200/50 active:scale-95 transition-all disabled:bg-slate-300 disabled:shadow-none">
-                            <div class="flex items-center justify-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                                <span>PAPAR INFO</span>
-                            </div>
-                        </button>
-                        <button (click)="openDatabaseSheet()" [disabled]="!stateSvc.isCloudConnected() || stateSvc.isSimulationMode()" class="w-full bg-blue-500 text-white p-4 rounded-2xl font-black text-xs shadow-lg shadow-blue-100/50 active:scale-95 transition-all disabled:bg-slate-300 disabled:shadow-none">
-                            <div class="flex items-center justify-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
-                                <span>BUKA PANGKALAN DATA</span>
-                            </div>
-                        </button>
-                        <button (click)="showSampleDataConfirm()" [disabled]="!stateSvc.isCloudConnected() || isAddingSampleData() || stateSvc.isSimulationMode()" class="w-full bg-emerald-500 text-white p-4 rounded-2xl font-black text-xs shadow-lg shadow-emerald-100/50 active:scale-95 transition-all disabled:bg-slate-300 disabled:shadow-none">
-                            <div class="flex items-center justify-center gap-2">
-                                @if(isAddingSampleData()) {
-                                    <svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                                } @else {
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><path d="M14 8v11"/><path d="M8 19h10"/><path d="M10 9H8"/></svg>
-                                }
-                                <span>{{ isAddingSampleData() ? 'MENAMBAH...' : 'TAMBAH DATA SAMPEL' }}</span>
-                            </div>
-                        </button>
+                } @else {
+                    <div class="bg-amber-50 text-amber-800 p-4 rounded-xl border border-amber-200 text-sm font-semibold flex items-start gap-3">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 flex-shrink-0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        <span>Cloud Tidak Aktif. Sila masukkan URL Google Apps Script anda.</span>
                     </div>
-                </div>
-
-                <!-- Simulation Data Section -->
-                @if (stateSvc.isSimulationMode()) {
-                    <div class="space-y-2">
-                        <h5 class="font-bold text-sky-700 text-sm">Data Simulasi</h5>
-                        <div class="pt-2 space-y-3">
-                            <p class="text-xs text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                Berikut ialah data semasa yang dijana dalam sesi simulasi ini. Anda boleh muat turun data ini sebagai fail JSON untuk simpanan atau untuk dipindahkan ke Google Sheets.
-                            </p>
-                            <div class="bg-slate-800 text-white rounded-xl p-4 max-h-60 overflow-auto text-xs font-mono">
-                                <pre>{{ simulationData() | json }}</pre>
-                            </div>
-                            <button (click)="downloadSimulationData()" class="w-full bg-emerald-500 text-white p-4 rounded-2xl font-black text-xs shadow-lg shadow-emerald-100/50 active:scale-95 transition-all">
-                                <div class="flex items-center justify-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                    <span>MUAT TURUN DATA JSON</span>
-                                </div>
-                            </button>
-                        </div>
-                    </div>
+                    <button (click)="toggleBackendSetup()" class="w-full bg-sky-500 text-white font-bold py-3 rounded-xl hover:bg-sky-600 transition-colors">
+                        {{ isBackendSetupVisible() ? 'Tutup Konfigurasi' : 'Konfigurasi Cloud' }}
+                    </button>
                 }
             </div>
         }
     </div>
 
-    <!-- Version Info (Collapsible) -->
-    <div class="bg-white p-6 rounded-[32px] shadow-sm border border-sky-50">
-        <div (click)="toggleVersionInfoVisibility()" class="flex justify-between items-center cursor-pointer">
+    @if (isBackendSetupVisible()) {
+    <div class="bg-white p-6 rounded-[32px] shadow-sm border border-sky-50 animate-fade-in-up">
+        <form [formGroup]="backendForm" (ngSubmit)="verifyCloud()" class="space-y-4">
             <div>
-                <h4 class="font-bold text-sky-800 text-base">Version Info</h4>
-                <p class="text-xs text-slate-400 mt-1">Lihat ciri-ciri baru dan kemajuan sistem.</p>
+                <label for="url" class="text-xs font-bold text-slate-500">URL Google Apps Script</label>
+                <input formControlName="url" id="url" type="url" placeholder="https://script.google.com/macros/s/..." class="w-full p-3 mt-1 bg-slate-50 border-0 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-sky-500 outline-none">
             </div>
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 transition-transform duration-300" [class.rotate-180]="isVersionInfoVisible()">
-                <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
+            <button type="submit" [disabled]="backendForm.invalid || isVerifying()" class="w-full bg-sky-500 text-white font-bold py-3 rounded-xl hover:bg-sky-600 transition-colors disabled:bg-slate-300">
+                {{ isVerifying() ? 'Menyambung...' : 'Sambung & Simpan' }}
+            </button>
+        </form>
+    </div>
+    }
+
+    <!-- Simulation Mode -->
+    <div class="bg-white p-6 rounded-[32px] shadow-sm border border-sky-50">
+        <h4 class="font-bold text-sky-800 text-base">Tetapan Mod Simulasi</h4>
+        <p class="text-xs text-slate-400 mt-1">Urus data dan fungsi yang berkaitan dengan mod latihan.</p>
+        <div class="mt-4 pt-4 border-t border-slate-100">
+            @if (stateSvc.isSimulationMode()) {
+                <button (click)="downloadSimulationData()" class="w-full bg-amber-500 text-white font-bold py-3 rounded-xl hover:bg-amber-600 transition-colors shadow-lg shadow-amber-200/50">
+                    Muat Turun Data Sesi Ini
+                </button>
+            } @else {
+                <p class="text-xs text-slate-400 text-center italic py-2">Fungsi ini hanya aktif dalam Mod Simulasi.</p>
+            }
+        </div>
+    </div>
+    
+    <!-- System Diagnostics -->
+    <div class="bg-white p-6 rounded-[32px] shadow-sm border border-sky-50">
+        <h4 class="font-bold text-sky-800 text-base">Diagnostik & Alat Bantuan</h4>
+        <p class="text-xs text-slate-400 mt-1">Semak kesihatan sistem dan pangkalan data anda.</p>
+        <div class="mt-4 pt-4 border-t border-slate-100 grid grid-cols-2 gap-3">
+            <button (click)="validateSheetStructure()" [disabled]="!stateSvc.isCloudConnected() || isCheckingStructure()" class="w-full flex flex-col items-center justify-center gap-1 h-20 bg-sky-50 text-sky-700 p-2 rounded-xl border border-sky-100 font-bold text-xs hover:bg-sky-100 transition-colors disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed">
+                @if(isCheckingStructure()) {
+                    <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="m10 12.5 2 2 4-4"/></svg>
+                }
+                <span>Semak Struktur Sheet</span>
+            </button>
+            <button (click)="testGps()" [disabled]="isTestingGps()" class="w-full flex flex-col items-center justify-center gap-1 h-20 bg-sky-50 text-sky-700 p-2 rounded-xl border border-sky-100 font-bold text-xs hover:bg-sky-100 transition-colors disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed">
+                 @if(isTestingGps()) {
+                    <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                }
+                <span>Uji GPS</span>
+            </button>
+            <button (click)="showConfigInfo()" [disabled]="!stateSvc.isCloudConnected()" class="w-full flex flex-col items-center justify-center gap-1 h-20 bg-sky-50 text-sky-700 p-2 rounded-xl border border-sky-100 font-bold text-xs hover:bg-sky-100 transition-colors disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-4.44a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h8.88a2 2 0 0 0 2-2v-8.88z"></path><path d="M18 2h-2.12a2 2 0 0 0-1.77 1.03L12 6" /><path d="m7 14 5-5" /><path d="m14 7 5 5" /><path d="M7 14h.01" /><path d="m12 9-1-1" /><path d="m11 14 1 1" /></svg>
+                <span>Papar Konfigurasi</span>
+            </button>
+            <button (click)="showSampleDataConfirm()" [disabled]="!stateSvc.isCloudConnected()" class="w-full flex flex-col items-center justify-center gap-1 h-20 bg-sky-50 text-sky-700 p-2 rounded-xl border border-sky-100 font-bold text-xs hover:bg-sky-100 transition-colors disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/></svg>
+                <span>Tambah Data Sampel</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- User Guide -->
+    <div class="bg-white p-6 rounded-[32px] shadow-sm border border-sky-50">
+        <h4 class="font-bold text-sky-800 text-base">Panduan Pengguna & Bantuan</h4>
+        <p class="text-xs text-slate-400 mt-1">Lihat panduan interaktif atau jana dokumen PDF untuk rujukan.</p>
+        <div class="mt-4 pt-4 border-t border-slate-100">
+            <button (click)="openUserGuide()" class="w-full flex items-center justify-center gap-2 bg-sky-500 text-white font-bold py-3 rounded-xl hover:bg-sky-600 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                <span>Buka Panduan Pengguna Interaktif</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Version Archive -->
+    <div class="bg-white p-6 rounded-[32px] shadow-sm border border-sky-50">
+        <h4 class="font-bold text-sky-800 text-base">Arkib Versi</h4>
+        <p class="text-xs text-slate-400 mt-1">Simpan snapshot ciri-ciri versi semasa sebagai rujukan masa hadapan.</p>
+        <div class="mt-4 pt-4 border-t border-slate-100 space-y-3">
+            <button (click)="archiveCurrentVersion()" [disabled]="isArchiving() || !stateSvc.isCloudConnected()" class="w-full flex items-center justify-center gap-2 bg-sky-500 text-white font-bold py-3 rounded-xl hover:bg-sky-600 transition-colors disabled:bg-slate-300">
+                @if(isArchiving()) {
+                    <svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                    <span>Mengarkib...</span>
+                } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span>Arkibkan Versi Semasa</span>
+                }
+            </button>
+            @if (archivedVersionUrl(); as url) {
+                <div class="bg-emerald-50 text-emerald-800 p-4 rounded-xl border border-emerald-200 text-sm font-semibold flex items-center justify-between gap-3 animate-fade-in-up">
+                    <div class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        <span>Arkib Berjaya Dicipta.</span>
+                    </div>
+                    <a [href]="url" target="_blank" class="text-xs font-bold bg-white text-emerald-700 px-3 py-1 rounded-lg hover:bg-emerald-100">
+                        Buka Dokumen
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Version Information -->
+    <div class="bg-white p-6 rounded-[32px] shadow-sm border border-sky-50">
+        <div class="flex justify-between items-center">
+            <div>
+                <h4 class="font-bold text-sky-800 text-base">Maklumat Versi & Fungsi</h4>
+                <p class="text-xs text-slate-400 mt-1">Senarai ciri-ciri yang tersedia dalam aplikasi MECC AMAL v2.6.</p>
+            </div>
+            <button (click)="toggleVersionInfoVisibility()" class="p-2 bg-sky-100 rounded-full text-sky-600 hover:bg-sky-200 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform duration-300" [class.rotate-180]="isVersionInfoVisible()">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </button>
         </div>
 
         @if (isVersionInfoVisible()) {
             <div class="mt-4 pt-4 border-t border-slate-100 space-y-6">
-                <div>
-                    <button (click)="saveFeaturesToDocs()" [disabled]="stateSvc.isSimulationMode() || isSavingToDocs()" class="w-full bg-sky-600 text-white p-4 rounded-2xl font-black text-xs shadow-lg shadow-sky-100 active:scale-95 transition-all disabled:bg-slate-300 disabled:shadow-none">
-                        <div class="flex items-center justify-center gap-2">
-                            @if(isSavingToDocs()) {
-                                <svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                                <span>MENYIMPAN KE DRIVE...</span>
-                            } @else {
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-                                <span>SIMPAN SEBAGAI GOOGLE DOC</span>
+                @if (stateSvc.isSimulationMode()) {
+                    <div>
+                        <h4 class="text-xs font-black text-amber-500 uppercase tracking-widest mb-3">Mod Simulasi</h4>
+                        @for (category of featureCategories; track category) {
+                            @if (getFeaturesByCategory(category, 'simulasi').length > 0) {
+                                <div class="mb-4">
+                                    <h5 class="font-bold text-sm text-slate-700 mb-2">{{ category }}</h5>
+                                    <div class="space-y-2">
+                                    @for(feature of getFeaturesByCategory(category, 'simulasi'); track feature.title) {
+                                        <div class="bg-slate-50/50 p-3 rounded-lg text-xs">
+                                            <p class="font-bold text-slate-600">{{ feature.title }}</p>
+                                            <p class="text-slate-500 mt-1">{{ feature.description }}</p>
+                                        </div>
+                                    }
+                                    </div>
+                                </div>
                             }
-                        </div>
-                    </button>
-                    @if(stateSvc.isSimulationMode()) {
-                        <p class="text-center text-xs text-slate-400 mt-2">Fungsi ini dilumpuhkan dalam Mod Simulasi.</p>
+                        }
+                    </div>
+                } @else {
+                    <div>
+                        <h4 class="text-xs font-black text-sky-600 uppercase tracking-widest mb-3">Mod Langsung</h4>
+                         @for (category of featureCategories; track category) {
+                            @if (getFeaturesByCategory(category, 'semua').length > 0) {
+                                <div class="mb-4">
+                                    <h5 class="font-bold text-sm text-slate-700 mb-2">{{ category }}</h5>
+                                    <div class="space-y-2">
+                                    @for(feature of getFeaturesByCategory(category, 'semua'); track feature.title) {
+                                        <div class="bg-slate-50/50 p-3 rounded-lg text-xs">
+                                            <p class="font-bold text-slate-600">{{ feature.title }}</p>
+                                            <p class="text-slate-500 mt-1">{{ feature.description }}</p>
+                                        </div>
+                                    }
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                }
+                
+                <button (click)="saveFeaturesToDocs()" [disabled]="!stateSvc.isCloudConnected() || isSavingToDocs()" class="w-full flex items-center justify-center gap-2 bg-sky-50 text-sky-700 font-bold py-3 rounded-xl border border-sky-100 hover:bg-sky-100 transition-colors disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed">
+                    @if (isSavingToDocs()) {
+                        <svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                        <span>Menyimpan...</span>
+                    } @else {
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                        <span>Simpan Senarai Ciri ke Google Docs</span>
                     }
-                </div>
-                <!-- Live & Common Features -->
-                <div>
-                    <h4 class="text-xs font-black text-sky-600 uppercase tracking-widest mb-3">Mod Langsung & Umum</h4>
-                    <div class="space-y-3">
-                        @for (feature of liveAndCommonFeatures; track feature.version) {
-                            <div class="text-slate-800">
-                                <p class="font-bold text-sm flex items-center gap-2">
-                                    {{ feature.title }}
-                                    @if (feature.version >= 2.4) {
-                                        <span class="text-[9px] font-black px-2 py-0.5 rounded-full bg-sky-100 text-sky-700">BARU</span>
-                                    }
-                                </p>
-                                <p class="text-xs text-slate-500 mt-0.5">{{ feature.description }}</p>
-                            </div>
-                        }
-                    </div>
-                </div>
-                <!-- Simulation Features -->
-                <div>
-                    <h4 class="text-xs font-black text-amber-600 uppercase tracking-widest mb-3">Mod Simulasi</h4>
-                    <div class="space-y-3">
-                         @for (feature of simulationFeatures; track feature.version) {
-                            <div class="text-slate-800">
-                                <p class="font-bold text-sm flex items-center gap-2">
-                                    {{ feature.title }}
-                                     @if (feature.version >= 2.2) {
-                                        <span class="text-[9px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">BARU</span>
-                                    }
-                                </p>
-                                <p class="text-xs text-slate-500 mt-0.5">{{ feature.description }}</p>
-                            </div>
-                        }
-                    </div>
-                </div>
+                </button>
             </div>
         }
     </div>
 </div>
 
-<!-- Full screen modal for program list -->
+<!-- All Programs List Modal -->
 @if (isProgramListModalVisible()) {
-    <div class="fixed inset-0 bg-black/60 z-[9990] flex items-center justify-center p-4" (click)="closeProgramListModal()">
-        <div class="bg-sky-50 w-full max-w-lg max-h-[90vh] rounded-3xl shadow-2xl flex flex-col" (click)="$event.stopPropagation()">
-            <div class="p-5 border-b border-sky-200 flex justify-between items-center flex-shrink-0">
-                <h3 class="font-bold text-sky-800 text-lg">Senarai Program Direkodkan</h3>
-                <button (click)="closeProgramListModal()" class="p-2 bg-sky-100 rounded-full text-sky-600 hover:bg-sky-200 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
-            </div>
-            <div class="p-5 overflow-y-auto space-y-3">
-                @if (isLoadingPrograms()) {
-                    <app-loading-indicator message="Memuat turun data dari Cloud..."></app-loading-indicator>
-                } @else if (allPrograms().length === 0) {
-                    <p class="text-center text-slate-500 py-10">Tiada program ditemui dalam rekod.</p>
-                } @else {
-                    @for (prog of allPrograms(); track prog.id) {
-                        <div class="bg-white rounded-2xl p-4 border border-slate-100">
-                            <p class="font-bold text-slate-800">{{ prog.namaprogram }}</p>
-                            <p class="text-xs font-mono text-sky-700 bg-sky-50 px-2 py-0.5 rounded mt-1 inline-block">{{ prog.id }}</p>
-                            <div class="mt-3 pt-3 border-t border-slate-100 grid grid-cols-3 gap-2 text-xs">
-                                <div>
-                                    <p class="font-bold text-slate-400">Tarikh</p>
-                                    <p class="font-semibold text-slate-600">{{ formatDate(prog.tarikh) }}</p>
-                                </div>
-                                <div>
-                                    <p class="font-bold text-slate-400">Masa</p>
-                                    <p class="font-semibold text-slate-600">{{ formatTime(prog.masa) }}</p>
-                                </div>
-                                <div>
-                                    <p class="font-bold text-slate-400">Lokasi</p>
-                                    <p class="font-semibold text-slate-600">{{ prog.lokasi }}</p>
-                                </div>
-                            </div>
-                            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
-                                <button (click)="activateProgram(prog)" [disabled]="stateSvc.activeProgram()?.id === prog.id || lockingProgramId() === prog.id" class="text-xs font-bold bg-sky-500 text-white px-4 py-2 rounded-lg hover:bg-sky-600 transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 w-28">
-                                    @if(lockingProgramId() === prog.id) {
-                                        <svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                                        <span>Mengaktifkan</span>
-                                    } @else {
-                                        <span>Aktifkan</span>
-                                    }
-                                </button>
-                                <button (click)="toggleLockProgram(prog, $event)" [disabled]="lockingProgramId() === prog.id" class="text-xs font-bold px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5" [class.bg-red-100]="!prog.locked" [class.text-red-700]="!prog.locked" [class.hover:bg-red-200]="!prog.locked" [class.bg-slate-100]="prog.locked" [class.text-slate-700]="prog.locked" [class.hover:bg-slate-200]="prog.locked" [class.bg-slate-200]="lockingProgramId() === prog.id" [class.cursor-wait]="lockingProgramId() === prog.id">
-                                    @if (lockingProgramId() === prog.id) {
-                                        <svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                                        <span>Mengemas kini...</span>
-                                    } @else if (prog.locked) {
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
-                                        <span>Buka Kunci</span>
-                                    } @else {
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                                        <span>Kunci</span>
-                                    }
-                                </button>
-                            </div>
-                        </div>
+  <div class="fixed inset-0 bg-black/60 z-[9998] flex items-center justify-center p-4" (click)="closeProgramListModal()">
+    <div class="bg-sky-50 w-full max-w-lg max-h-[90vh] rounded-3xl shadow-2xl flex flex-col" (click)="$event.stopPropagation()">
+      <!-- Header -->
+      <div class="p-5 border-b border-sky-200 flex justify-between items-center flex-shrink-0">
+        <h3 class="font-bold text-sky-800 text-lg">Urus & Aktifkan Program</h3>
+        <button (click)="closeProgramListModal()" class="p-2 bg-sky-100 rounded-full text-sky-600 hover:bg-sky-200 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <!-- Content -->
+      <div class="p-5 overflow-y-auto">
+        @if (isLoadingPrograms()) {
+          <app-loading-indicator message="Memuat turun senarai program..."></app-loading-indicator>
+        } @else if (allPrograms().length === 0) {
+          <p class="text-xs text-slate-400 text-center py-8 italic">Tiada program ditemui.</p>
+        } @else {
+          <div class="space-y-3">
+            @for (program of allPrograms(); track program.id) {
+              <div class="bg-white p-4 rounded-xl border border-slate-100">
+                <div class="flex justify-between items-start gap-2">
+                  <p class="font-semibold text-slate-800">{{ program.namaprogram }}</p>
+                  <button (click)="toggleLockProgram(program, $event)" [disabled]="lockingProgramId() === program.id" class="p-2 text-slate-400 hover:text-sky-600 transition-colors disabled:opacity-50">
+                    @if(lockingProgramId() === program.id) {
+                      <svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                    } @else {
+                      @if (program.locked) {
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                      } @else {
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
+                      }
                     }
+                  </button>
+                </div>
+                <p class="text-xs font-mono text-sky-700 bg-sky-50 px-2 py-0.5 rounded mt-1 inline-block">{{ program.id }}</p>
+                @if (program.status !== 'Aktif') {
+                  <button (click)="activateProgram(program)" [disabled]="lockingProgramId() === program.id" class="mt-3 w-full text-sm font-bold bg-sky-500 text-white px-5 py-2 rounded-lg hover:bg-sky-600 transition-colors disabled:bg-slate-300">
+                    Aktifkan Program Ini
+                  </button>
+                } @else {
+                  <p class="mt-3 text-center text-sm font-bold text-emerald-600 bg-emerald-100 p-2 rounded-lg">
+                    Program Sedang Aktif
+                  </p>
                 }
-            </div>
-        </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
     </div>
+  </div>
 }
 
 <!-- Add Sample Data Confirmation Modal -->
@@ -343,16 +323,63 @@
   <div class="fixed inset-0 bg-black/60 z-[9998] flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl p-6 shadow-xl w-full max-w-sm text-center animate-fade-in-up">
         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-amber-500 mb-4"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-        <h3 class="font-bold text-lg text-slate-800">Tambah Data Sampel?</h3>
-        <p class="text-sm text-slate-500 mt-2">Ini akan menambah data sampel (cekpoint & ambulans) ke program terkini di Google Sheets anda. Tindakan ini tidak boleh diundur.</p>
+        <h3 class="font-bold text-lg text-slate-800">Sahkan Tambah Data Sampel</h3>
+        <p class="text-sm text-slate-500 mt-2">Ini akan menambah data sampel (Cekpoint & Ambulans) ke dalam program <span class="font-bold">paling terkini</span> di Cloud. Teruskan?</p>
         <div class="grid grid-cols-2 gap-3 mt-6">
             <button (click)="hideSampleDataConfirm()" class="bg-slate-100 text-slate-700 font-bold py-3 rounded-xl hover:bg-slate-200 transition-colors">
                 Batal
             </button>
-            <button (click)="confirmAddSampleData()" class="bg-amber-500 text-white font-bold py-3 rounded-xl hover:bg-amber-600 transition-colors">
-                Ya, Tambah
+            <button (click)="confirmAddSampleData()" [disabled]="isAddingSampleData()" class="bg-amber-500 text-white font-bold py-3 rounded-xl hover:bg-amber-600 transition-colors disabled:bg-slate-300">
+                @if(isAddingSampleData()) {
+                    <span>Menambah...</span>
+                } @else {
+                    <span>Ya, Teruskan</span>
+                }
             </button>
         </div>
+    </div>
+  </div>
+}
+
+<!-- Interactive User Guide Modal -->
+@if (isUserGuideVisible()) {
+  <div class="fixed inset-0 bg-black/70 z-[9998] flex items-center justify-center p-4" (click)="closeUserGuide()">
+    <div class="bg-sky-50 w-full max-w-2xl h-[95vh] rounded-3xl shadow-2xl flex flex-col animate-fade-in-up" (click)="$event.stopPropagation()">
+      <!-- Header -->
+      <div class="p-4 bg-white/80 backdrop-blur-sm border-b border-sky-200 flex justify-between items-center flex-shrink-0 rounded-t-3xl">
+        <div class="flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-sky-600"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            <h3 class="font-bold text-slate-800 text-lg leading-tight">Panduan Pengguna Interaktif</h3>
+        </div>
+        <button (click)="closeUserGuide()" class="p-2 bg-slate-100 rounded-full text-slate-600 hover:bg-slate-200 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+       <!-- Actions -->
+       <div class="p-3 bg-white/50 border-b border-sky-200 flex-shrink-0 flex items-center justify-between">
+            <p class="text-xs text-slate-500 font-semibold">Lompat ke bahagian:</p>
+            <div class="flex items-center gap-2">
+                <a href="#guide-workflow" class="text-xs font-bold bg-sky-100 text-sky-700 px-3 py-1 rounded-lg hover:bg-sky-200">Aliran Kerja</a>
+                <a href="#guide-dashboard" class="text-xs font-bold bg-sky-100 text-sky-700 px-3 py-1 rounded-lg hover:bg-sky-200">Dashboard</a>
+            </div>
+       </div>
+
+      <!-- Content -->
+      <div class="flex-grow overflow-y-auto" [innerHTML]="sanitizedUserGuideHtml()">
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="p-4 bg-white/80 backdrop-blur-sm border-t border-slate-200 flex-shrink-0 flex justify-end items-center gap-3 rounded-b-3xl">
+        <button (click)="generateAndDownloadPdf()" [disabled]="isGeneratingGuide()" class="flex items-center gap-2 bg-sky-600 text-white font-bold text-sm px-4 py-2 rounded-xl hover:bg-sky-700 transition-colors disabled:bg-slate-300">
+            @if(isGeneratingGuide()) {
+                <svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                <span>Menjana PDF...</span>
+            } @else {
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Muat Turun PDF</span>
+            }
+        </button>
+      </div>
     </div>
   </div>
 }

@@ -1,18 +1,23 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { CommonModule, JsonPipe } from '@angular/common';
+import { DomSanitizer, SafeResourceUrl, SafeHtml } from '@angular/platform-browser';
 import { StateService } from '../../services/state.service';
 import { ApiService } from '../../services/api.service';
 import { NotificationService } from '../../services/notification.service';
 import { SimulationService } from '../../services/simulation.service';
 import { Program } from '../../models';
 import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicator.component';
+import { GpsService } from '../../services/gps.service';
+import { UserGuideService } from '../../services/user-guide.service';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface Feature {
   title: string;
   description: string;
   mode: 'simulasi' | 'live' | 'semua';
-  version: number;
+  category: string;
 }
 
 @Component({
@@ -26,8 +31,10 @@ export class SettingsComponent {
   private apiSvc = inject(ApiService);
   private notificationSvc = inject(NotificationService);
   private simulationSvc = inject(SimulationService);
-  // FIX: Explicitly type injected FormBuilder to fix type inference issues.
+  private gpsSvc = inject(GpsService);
+  private userGuideSvc = inject(UserGuideService);
   private fb: FormBuilder = inject(FormBuilder);
+  private sanitizer = inject(DomSanitizer);
 
   isBackendSetupVisible = signal(false);
   isProgramFormVisible = signal(false);
@@ -40,6 +47,7 @@ export class SettingsComponent {
   isCheckingNextId = signal(false);
   nextCloudId = signal<string | null>(null);
   isCheckingStructure = signal(false);
+  isTestingGps = signal(false);
   
   isProgramListModalVisible = signal(false);
   allPrograms = signal<Program[]>([]);
@@ -47,26 +55,55 @@ export class SettingsComponent {
   lockingProgramId = signal<string | null>(null);
 
   isSavingToDocs = signal(false);
+  isArchiving = signal(false);
+  archivedVersionUrl = signal<string | null>(null);
 
-  // Signals for Add Sample Data feature
   isAddingSampleData = signal(false);
   isSampleDataConfirmVisible = signal(false);
 
-  // Make simulation data available to the template
+  // User Guide Signals
+  isGeneratingGuide = signal(false);
+  isUserGuideVisible = signal(false);
+  userGuideHtml = signal<string>('');
+  sanitizedUserGuideHtml = computed<SafeHtml>(() => {
+    return this.sanitizer.bypassSecurityTrustHtml(this.userGuideHtml());
+  });
+
   simulationData = this.simulationSvc.exportedData;
 
-  // --- Version Info Features ---
-  private readonly allFeatures: Feature[] = ([
-    { version: 2.4, mode: 'semua', title: 'Log Keluar Global', description: 'Butang log keluar universal di header utama untuk akses mudah.' },
-    { version: 2.3, mode: 'simulasi', title: 'Eksport Data Simulasi', description: 'Muat turun semua data sesi latihan (program, kes, kehadiran) sebagai fail JSON.' },
-    { version: 2.2, mode: 'simulasi', title: 'Cipta Program Latihan', description: 'Fungsi untuk menambah program baru terus di dalam Mod Simulasi untuk latihan menyeluruh.' },
-    { version: 2.1, mode: 'semua', title: 'Antara Muka Disatukan', description: 'Reka bentuk visual yang dikemaskini untuk pengalaman pengguna yang lebih baik.' },
-    { version: 2.0, mode: 'simulasi', title: 'Mod Latihan Interaktif', description: 'Pengenalan Mod Simulasi dengan data sampel untuk tujuan latihan dan demo.' },
-    { version: 1.0, mode: 'live', title: 'Penyambungan Cloud', description: 'Integrasi dengan Google Sheets untuk pengurusan data secara langsung.' },
-  ] as Feature[]).sort((a, b) => b.version - a.version);
+  private readonly allFeatures: Feature[] = [
+    { category: 'Bantuan AI & Pintar', mode: 'semua', title: 'Carian Fasiliti Pintar', description: 'Menggunakan AI dan data GPS untuk mencari hospital dan klinik berdekatan.' },
+    { category: 'Bantuan AI & Pintar', mode: 'semua', title: 'Pengiraan Jarak Tepat', description: 'AI diarah untuk mengira jarak perjalanan darat sebenar untuk ketepatan maksimum.' },
+    { category: 'Bantuan AI & Pintar', mode: 'semua', title: 'Integrasi Peta Google', description: 'Setiap fasiliti dalam hasil carian boleh dibuka terus dalam Peta Google.' },
+    { category: 'Modul Petugas (Responder)', mode: 'simulasi', title: 'Dashboard Petugas', description: 'Antara muka khas untuk petugas di lapangan, memaparkan info program aktif dan akses kepada alatan AI.' },
+    { category: 'Modul Petugas (Responder)', mode: 'simulasi', title: 'Log Masuk Petugas', description: 'Aliran log masuk berasingan untuk petugas bagi tujuan latihan dalam Mod Simulasi.' },
+    { category: 'Sistem Teras & Antara Muka', mode: 'semua', title: 'Antara Muka Bersepadu', description: 'Reka bentuk yang kemas dan moden untuk pengalaman pengguna yang lebih baik.' },
+    { category: 'Sistem Teras & Antara Muka', mode: 'semua', title: 'Log Keluar Global', description: 'Butang log keluar universal di header utama untuk akses mudah.' },
+    { category: 'Sistem Teras & Antara Muka', mode: 'semua', title: 'Status GPS & Cloud Langsung', description: 'Penunjuk status masa nyata untuk sambungan GPS dan Cloud di header.' },
+    { category: 'Sistem Teras & Antara Muka', mode: 'semua', title: 'Sistem Maklum Balas', description: 'Borang bersepadu untuk menghantar maklum balas, cadangan, atau laporan ralat kepada pembangun.' },
+    { category: 'Pengurusan Program', mode: 'semua', title: 'Pengurusan Program Berpusat', description: 'Papar, aktifkan, nyahaktifkan, dan tandakan program sebagai selesai.' },
+    { category: 'Pengurusan Program', mode: 'semua', title: 'Perancangan Operasi Terperinci', description: 'Tambah dan urus butiran seperti Cekpoint, Ambulans, dan maklumat lain untuk setiap program.' },
+    { category: 'Pengurusan Program', mode: 'live', title: 'Kunci Program (Locked)', description: 'Kunci program untuk mengelakkan sebarang suntingan yang tidak disengajakan.' },
+    { category: 'Pengurusan Program', mode: 'semua', title: 'Cadangan Autolengkap', description: 'Cadangan untuk lokasi dan nombor kenderaan yang pernah digunakan untuk mempercepatkan kemasukan data.' },
+    { category: 'Dashboard & Pemantauan', mode: 'semua', title: 'Dashboard Masa Nyata', description: 'Pemantauan langsung petugas aktif, laporan kes, dan butiran operasi.' },
+    { category: 'Dashboard & Pemantauan', mode: 'semua', title: 'Log Interaktif', description: 'Sejarah kehadiran dan laporan kes yang boleh disembunyi/dipapar.' },
+    { category: 'Dashboard & Pemantauan', mode: 'semua', title: 'Penyegaran Auto & Manual', description: 'Data disegarkan secara automatik, dengan pilihan untuk penyegaran manual.' },
+    { category: 'Simulasi & Latihan', mode: 'simulasi', title: 'Mod Simulasi Interaktif', description: 'Persekitaran selamat untuk latihan dengan penjanaan data kehadiran dan kes secara automatik.' },
+    { category: 'Simulasi & Latihan', mode: 'simulasi', title: 'Eksport Data Simulasi', description: 'Muat turun semua data dari sesi latihan sebagai fail JSON.' },
+    { category: 'Simulasi & Latihan', mode: 'simulasi', title: 'Cipta Program Latihan', description: 'Buat program baru terus di dalam mod simulasi.' },
+    { category: 'Sistem & Diagnostik', mode: 'live', title: 'Konfigurasi Cloud', description: 'Sambungkan aplikasi kepada pangkalan data Google Sheets anda.' },
+    { category: 'Sistem & Diagnostik', mode: 'semua', title: 'Alatan Diagnostik', description: 'Uji GPS, sahkan struktur sheet, dan paparkan maklumat konfigurasi semasa.' },
+    { category: 'Sistem & Diagnostik', mode: 'live', title: 'Tambah Data Sampel', description: 'Masukkan data operasi sampel (Cekpoint, Ambulans) ke program terkini untuk persediaan pantas.' },
+    { category: 'Sistem & Diagnostik', mode: 'live', title: 'Arkib Versi', description: 'Cipta salinan senarai ciri aplikasi semasa ke dalam Google Doc.' },
+    { category: 'Sistem & Diagnostik', mode: 'semua', title: 'Panduan Pengguna PDF', description: 'Jana, muat turun, dan kongsi panduan pengguna lengkap dalam format PDF.' },
+  ];
+  
+  featureCategories = [...new Set(this.allFeatures.map(f => f.category))];
 
-  liveAndCommonFeatures = this.allFeatures.filter(f => f.mode === 'live' || f.mode === 'semua');
-  simulationFeatures = this.allFeatures.filter(f => f.mode === 'simulasi');
+  getFeaturesByCategory(category: string, mode: 'semua' | 'simulasi') {
+      const targetModes = mode === 'semua' ? ['semua', 'live'] : ['semua', 'simulasi'];
+      return this.allFeatures.filter(f => f.category === category && targetModes.includes(f.mode));
+  }
 
   backendForm = this.fb.group({
     url: [this.stateSvc.gasUrl(), [Validators.required, Validators.pattern('^https://script\\.google\\.com.*')]],
@@ -175,8 +212,8 @@ export class SettingsComponent {
 
   async checkNextCloudId(): Promise<void> {
     this.isCheckingNextId.set(true);
-    this.nextCloudId.set(null); // Clear previous result
-    await new Promise(resolve => setTimeout(resolve, 300)); // UX delay
+    this.nextCloudId.set(null);
+    await new Promise(resolve => setTimeout(resolve, 300));
     try {
       const newId = await this.apiSvc.getNewProgramId();
       this.nextCloudId.set(newId);
@@ -196,7 +233,7 @@ export class SettingsComponent {
   async openProgramListModal(): Promise<void> {
     this.isProgramListModalVisible.set(true);
     this.isLoadingPrograms.set(true);
-    this.allPrograms.set([]); // Clear previous data
+    this.allPrograms.set([]);
     try {
         const programs = await this.apiSvc.getPrograms();
         this.allPrograms.set(programs);
@@ -218,7 +255,6 @@ export class SettingsComponent {
       return;
     }
     
-    // The server will generate the ID, so we don't send it.
     const payload = {
         name: this.programForm.value.name,
         date: this.programForm.value.date,
@@ -229,7 +265,6 @@ export class SettingsComponent {
     const result = await this.apiSvc.saveProgram(payload);
 
     if (result.success && result.newProgram) {
-      // Do not set the new program as active automatically.
       this.notificationSvc.show(
         'case', 
         'Program Berjaya Disimpan', 
@@ -237,7 +272,7 @@ export class SettingsComponent {
       );
       this.programForm.reset();
       this.isProgramFormVisible.set(false);
-      this.stateSvc.programListVersion.update(v => v + 1); // Trigger refresh in other components
+      this.stateSvc.programListVersion.update(v => v + 1);
     } else {
       const errorMessage = result.message || 'Gagal menyimpan data program ke Cloud.';
       this.notificationSvc.show('error', 'Ralat Menyimpan', errorMessage);
@@ -276,6 +311,30 @@ export class SettingsComponent {
     }
   }
 
+  async testGps(): Promise<void> {
+    this.isTestingGps.set(true);
+    const result = await this.gpsSvc.testCurrentLocation();
+    
+    if (result.status === 'CONNECTED' && result.position) {
+      const { latitude, longitude, accuracy } = result.position;
+      this.notificationSvc.show(
+        'case', 
+        'GPS Berjaya', 
+        `Lokasi semasa:\nLat: ${latitude.toFixed(6)}\nLon: ${longitude.toFixed(6)}\n(Ketepatan: ${accuracy.toFixed(1)} meter)`
+      );
+    } else {
+      let message = 'Tidak dapat mendapatkan lokasi GPS.';
+      if (result.status === 'UNSUPPORTED') {
+        message = 'Peranti ini tidak menyokong GPS.';
+      } else if (result.status === 'ERROR') {
+        message = 'Ralat berlaku semasa mendapatkan lokasi. Pastikan anda telah memberi kebenaran.';
+      }
+      this.notificationSvc.show('error', 'Ujian GPS Gagal', message);
+    }
+    
+    this.isTestingGps.set(false);
+  }
+
   showConfigInfo(): void {
     const url = this.stateSvc.gasUrl();
     const sheetConfig = this.stateSvc.sheetNames();
@@ -309,11 +368,9 @@ export class SettingsComponent {
       if (result.success) {
         this.notificationSvc.show('case', 'Program Diaktifkan', `Program "${program.namaprogram}" kini aktif.`);
 
-        // Update local state to reflect the change without a full re-fetch.
         this.allPrograms.update(programs =>
           programs.map(p => {
             if (p.id === program.id) return { ...p, status: 'Aktif' };
-            // Deactivate any other program that was active.
             if (p.status === 'Aktif') return { ...p, status: 'Belum Mula' };
             return p;
           })
@@ -321,10 +378,7 @@ export class SettingsComponent {
         
         const activatedProgram: Program = { ...program, status: 'Aktif' };
         this.stateSvc.activeProgram.set(activatedProgram);
-        
-        // Trigger a refresh for other components like the main program list.
         this.stateSvc.programListVersion.update(v => v + 1);
-
         this.closeProgramListModal();
 
       } else {
@@ -340,7 +394,6 @@ export class SettingsComponent {
 
   async toggleLockProgram(program: Program, event: Event): Promise<void> {
     event.stopPropagation();
-
     if (this.lockingProgramId()) return;
 
     this.lockingProgramId.set(program.id);
@@ -388,26 +441,45 @@ export class SettingsComponent {
   }
 
   private _generateFeatureListContent(): string {
-    let content = `Dokumen: Ringkasan Ciri-ciri & Fungsi Sistem MECC AMAL v2.4\n\n`;
-    content += `Dokumen ini memberikan gambaran keseluruhan tentang keupayaan aplikasi MECC AMAL Smart Response, merangkumi fungsi utama, ciri terkini, dan aliran kerja yang disyorkan.\n\n`;
+    let content = `Dokumen: Ringkasan Ciri-ciri & Fungsi Sistem MECC AMAL v2.6\n\n`;
+    content += `Dokumen ini memberikan gambaran keseluruhan tentang keupayaan aplikasi MECC AMAL Smart Response.\n\n`;
 
-    content += `## Mod Langsung & Umum\n`;
-    this.liveAndCommonFeatures.forEach(feature => {
-      content += `* v${feature.version} - ${feature.title}: ${feature.description}\n`;
-    });
-    content += `\n`;
-
-    content += `## Mod Simulasi\n`;
-    this.simulationFeatures.forEach(feature => {
-      content += `* v${feature.version} - ${feature.title}: ${feature.description}\n`;
+    this.featureCategories.forEach(category => {
+      content += `## ${category}\n`;
+      const features = this.getFeaturesByCategory(category, 'semua');
+      features.forEach(feature => {
+        content += `* ${feature.title}: ${feature.description}\n`;
+      });
+      content += `\n`;
     });
 
     return content;
   }
 
+  async archiveCurrentVersion(): Promise<void> {
+    this.isArchiving.set(true);
+    const title = `Arkib Versi MECC AMAL (${new Date().toLocaleString('ms-MY')})`;
+    const content = this._generateFeatureListContent();
+
+    try {
+      const result = await this.apiSvc.saveFeatureListToDocs(title, content);
+      if (result.success && result.url) {
+        this.archivedVersionUrl.set(result.url);
+        this.notificationSvc.show('case', 'Versi Diarkibkan', 'Snapshot ciri-ciri versi ini telah disimpan ke Google Drive.');
+      } else {
+        throw new Error(result.message || 'Gagal mencipta dokumen arkib di Google Drive.');
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Ralat tidak diketahui.';
+      this.notificationSvc.show('error', 'Gagal Mengarkib', msg);
+    } finally {
+      this.isArchiving.set(false);
+    }
+  }
+
   async saveFeaturesToDocs(): Promise<void> {
     this.isSavingToDocs.set(true);
-    const title = 'MECC AMAL v2.4 Feature List';
+    const title = 'MECC AMAL v2.6 Feature List';
     const content = this._generateFeatureListContent();
 
     try {
@@ -449,6 +521,65 @@ export class SettingsComponent {
         this.notificationSvc.show('error', 'Operasi Gagal', msg);
     } finally {
         this.isAddingSampleData.set(false);
+    }
+  }
+
+  openUserGuide(): void {
+    this.userGuideHtml.set(this.userGuideSvc.generateGuideHtml(true));
+    this.isUserGuideVisible.set(true);
+  }
+
+  closeUserGuide(): void {
+    this.isUserGuideVisible.set(false);
+    this.userGuideHtml.set('');
+  }
+
+  async generateAndDownloadPdf(): Promise<void> {
+    this.isGeneratingGuide.set(true);
+    this.notificationSvc.show('info', 'Menjana PDF...', 'Sila tunggu, proses ini mungkin mengambil masa beberapa saat.');
+    
+    // Use a non-interactive version of HTML for PDF generation
+    const guideHtml = this.userGuideSvc.generateGuideHtml(false);
+
+    try {
+      const container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.left = '-9999px';
+      container.style.top = '0';
+      container.style.width = '800px';
+      container.innerHTML = guideHtml;
+      document.body.appendChild(container);
+
+      const canvas = await html2canvas(container, { scale: 2, useCORS: true, logging: false });
+      document.body.removeChild(container);
+
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgData = canvas.toDataURL('image/png');
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      
+      let heightLeft = pdfHeight;
+      let position = 0;
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = -pageHeight * (pdf.internal.pages.length - 1);
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+        heightLeft -= pageHeight;
+      }
+      
+      pdf.save(`Panduan_Pengguna_MECC_AMAL_v2.6.pdf`);
+    } catch (e) {
+      console.error('Failed to generate PDF:', e);
+      const msg = e instanceof Error ? e.message : 'Ralat tidak diketahui.';
+      this.notificationSvc.show('error', 'Gagal Menjana PDF', msg);
+    } finally {
+      this.isGeneratingGuide.set(false);
     }
   }
 

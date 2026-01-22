@@ -1,6 +1,6 @@
 <div class="flex flex-col items-center justify-center min-h-screen bg-sky-900 p-4 animate-fade-in-up">
   <div class="text-center mb-10">
-    <h1 class="font-bold text-3xl text-white leading-tight">MECC AMAL <span class="text-xs bg-sky-700 px-2 py-0.5 rounded-full ml-1 align-middle">v2.0</span></h1>
+    <h1 class="font-bold text-3xl text-white leading-tight">MECC AMAL <span class="text-xs bg-sky-700 px-2 py-0.5 rounded-full ml-1 align-middle">v2.6</span></h1>
     <p class="text-sm text-sky-300 uppercase tracking-widest font-bold mt-1">Respon Pintar Cloud</p>
   </div>
 
@@ -43,6 +43,19 @@
         </div>
       </div>
     </button>
+    
+    <!-- External Link Card -->
+    <a href="https://ai.studio/apps/drive/1nCHGBXNuIodd91f5S80uk2YfIU56U6sC" target="_blank" rel="noopener noreferrer" class="block w-full bg-white p-6 rounded-3xl shadow-lg text-left transform hover:scale-105 transition-transform duration-300 ease-out">
+      <div class="flex items-center gap-5">
+        <div class="bg-slate-100 text-slate-600 p-4 rounded-2xl">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+        </div>
+        <div>
+          <h2 class="font-bold text-lg text-slate-800">Log Tugas</h2>
+          <p class="text-sm text-slate-500 mt-1">Buka sistem log tugas luaran.</p>
+        </div>
+      </div>
+    </a>
   </div>
   
   <div class="text-center mt-8">
@@ -70,13 +83,37 @@
         <!-- System Workflow -->
         <div>
           <h4 class="text-xs font-black text-sky-600 uppercase tracking-widest mb-3">Aliran Kerja Sistem</h4>
-          <ol class="list-decimal list-inside space-y-2 text-sm text-slate-600">
-            <li><span class="font-bold">Konfigurasi:</span> Di tab <span class="font-bold bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded">Tetapan</span>, masukkan URL Google Apps Script anda untuk menyambung ke Cloud.</li>
-            <li><span class="font-bold">Cipta/Pilih Program:</span> Tambah program baru di tab <span class="font-bold bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded">Tetapan</span> atau pilih program sedia ada di tab <span class="font-bold bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded">Program</span>.</li>
-            <li><span class="font-bold">Aktifkan Program:</span> Tekan butang 'Aktifkan' pada program pilihan anda untuk memulakan pemantauan.</li>
-            <li><span class="font-bold">Pantau Dashboard:</span> Pergi ke tab <span class="font-bold bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded">Dashboard</span> untuk melihat data kehadiran dan laporan kes secara langsung.</li>
-            <li><span class="font-bold">Urus Data Operasi:</span> Di tab <span class="font-bold bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded">Program</span>, klik 'Maklumat Lanjut' untuk menambah data Cekpoint, Ambulans, dan maklumat lain yang berkaitan.</li>
-          </ol>
+          <div class="space-y-4 text-sm">
+            <div>
+              <p class="font-bold text-slate-800">1. Pra-Tugasan (Persediaan Awal)</p>
+              <ol class="list-decimal list-inside ml-4 mt-2 space-y-2 text-slate-600 text-xs">
+                  <li><span class="font-semibold">Log Masuk:</span> PIC MECC atau AJK Unit log masuk ke dalam sistem.</li>
+                  <li><span class="font-semibold">Cipta Program:</span> Masukkan maklumat asas program baru (Nama, Tarikh, dsb.) melalui tab Tetapan.</li>
+                  <li><span class="font-semibold">Lengkapkan Butiran Operasi:</span> Di tab Program, pilih program dan kemas kini maklumat lanjut seperti:
+                      <ul class="list-disc list-inside ml-5 mt-1">
+                          <li>Cekpoint (Nama, Lokasi, PIC, Krew)</li>
+                          <li>Ambulans (Callsign, No. Plat, Krew)</li>
+                          <li>Maklumat Lain yang berkaitan.</li>
+                      </ul>
+                  </li>
+                  <li><span class="font-semibold">Aktifkan Program:</span> Program diaktifkan sehari atau beberapa jam sebelum tugasan bermula untuk persediaan akhir.</li>
+              </ol>
+            </div>
+             <div>
+              <p class="font-bold text-slate-800">2. Semasa Tugasan (Hari Operasi)</p>
+              <ol class="list-decimal list-inside ml-4 mt-2 space-y-2 text-slate-600 text-xs">
+                  <li><span class="font-semibold">Pemantauan Dashboard:</span> Semua aktiviti program yang aktif dipantau secara langsung di Dashboard.</li>
+                  <li><span class="font-semibold">Selia Kehadiran:</span> Kehadiran petugas direkodkan secara automatik. Notifikasi akan dipaparkan apabila petugas log masuk atau log keluar.</li>
+                  <li><span class="font-semibold">Selia Laporan Kes:</span> Setiap kes yang dilaporkan oleh petugas akan mencetuskan notifikasi dan direkodkan di Dashboard untuk tindakan segera.</li>
+              </ol>
+            </div>
+             <div>
+              <p class="font-bold text-slate-800">3. Pasca-Tugasan</p>
+               <ol class="list-decimal list-inside ml-4 mt-2 space-y-2 text-slate-600 text-xs">
+                  <li><span class="font-semibold">Jana Laporan:</span> Fungsi untuk menjana laporan penuh selepas program selesai. <span class="font-semibold text-amber-600">(Dalam Pembangunan)</span></li>
+              </ol>
+            </div>
+          </div>
         </div>
         <!-- Main Functions -->
         <div>

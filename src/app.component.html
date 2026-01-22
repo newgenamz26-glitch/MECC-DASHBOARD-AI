@@ -20,21 +20,52 @@
   <!-- Header -->
   <nav class="bg-sky-900 text-white p-5 sticky z-50 shadow-md flex justify-between items-center rounded-b-[30px]" [class.top-0]="!stateSvc.isSimulationMode()" [class.top-[22px]]="stateSvc.isSimulationMode()">
       <div>
-          <h1 class="font-bold text-lg leading-tight">MECC AMAL <span class="text-[10px] bg-sky-700 px-2 py-0.5 rounded-full ml-1">v2.0</span></h1>
+          <h1 class="font-bold text-lg leading-tight">MECC AMAL <span class="text-[10px] bg-sky-700 px-2 py-0.5 rounded-full ml-1">v2.6</span></h1>
           @if(stateSvc.loggedInResponder(); as responder) {
             <p class="text-[10px] text-sky-300 font-semibold">{{ responder.name }} ({{ responder.role }})</p>
           } @else {
             <p class="text-[10px] text-sky-300 uppercase tracking-widest font-bold">Respon Pintar Cloud</p>
           }
       </div>
-      <div class="flex items-center gap-4">
-          <div class="flex items-center gap-2 text-[10px] font-bold bg-white/10 px-3 py-2 rounded-full border border-white/20">
+      <div class="flex items-center gap-2">
+          <!-- GPS Status -->
+          <div class="flex items-center gap-1.5 bg-white/10 px-2 py-1.5 rounded-xl border border-white/20">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                   class="transition-colors flex-shrink-0"
+                   [class.text-sky-400]="isGpsConnected()"
+                   [class.text-red-500]="!isGpsConnected()"
+                   [class.animate-pulse]="stateSvc.gpsStatus() === 'REQUESTING'">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              <div>
+                <p class="text-[9px] font-black uppercase tracking-wider" [class.text-white]="isGpsConnected()" [class.text-red-400]="!isGpsConnected()">
+                  {{ gpsStatusMessage() }}
+                </p>
+                @if(isGpsConnected() && currentLocationDisplay()) {
+                  <p class="text-[8px] font-mono text-white/70 -mt-0.5">{{ currentLocationDisplay() }}</p>
+                }
+              </div>
+          </div>
+          <!-- Server Status -->
+          <div class="flex items-center gap-1.5 bg-white/10 px-2 py-1.5 rounded-xl border border-white/20">
               @if (stateSvc.isSimulationMode()) {
-                  <div class="w-2 h-2 rounded-full bg-amber-400"></div>
-                  <span>SIMULASI</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-amber-400 flex-shrink-0">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                <div>
+                  <p class="text-[9px] font-black uppercase tracking-wider text-white">SIMULASI</p>
+                  <p class="text-[8px] font-mono text-white/70 -mt-0.5">Mode Latihan</p>
+                </div>
               } @else {
-                  <div class="w-2 h-2 rounded-full transition-colors" [class.bg-sky-400]="stateSvc.isCloudConnected()" [class.bg-red-500]="!stateSvc.isCloudConnected()"></div>
-                  <span>{{ stateSvc.isCloudConnected() ? 'DALAM TALIAN' : 'LUAR TALIAN' }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0" [class.text-sky-400]="stateSvc.isCloudConnected()" [class.text-red-500]="!stateSvc.isCloudConnected()">
+                  <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                </svg>
+                <div>
+                  <p class="text-[9px] font-black uppercase tracking-wider" [class.text-white]="stateSvc.isCloudConnected()" [class.text-red-400]="!stateSvc.isCloudConnected()">
+                    {{ stateSvc.isCloudConnected() ? 'CLOUD OK' : 'RALAT' }}
+                  </p>
+                  <p class="text-[8px] font-mono text-white/70 -mt-0.5">{{ stateSvc.isCloudConnected() ? 'Sambungan Aktif' : 'Semak Tetapan' }}</p>
+                </div>
               }
           </div>
           <button (click)="confirmLogout()" class="text-sky-300 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10 active:scale-90">

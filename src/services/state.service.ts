@@ -12,6 +12,13 @@ const MECC_RESPONDER_KEY = 'MECC_RESPONDER_V1';
 const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbzJEUmkNIkmFGiBQiBrtpEVEn3ZZIFsM0ynVUrBbqkfOIA3Oh1mFa5qwoQGAubkaoju1g/exec';
 
 type ActiveTab = 'dashboard' | 'program' | 'settings';
+export type GpsStatus = 'IDLE' | 'REQUESTING' | 'CONNECTED' | 'ERROR' | 'UNSUPPORTED';
+
+export interface Position {
+  latitude: number;
+  longitude: number;
+  accuracy: number;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -34,6 +41,10 @@ export class StateService {
   isSimulationMode = signal<boolean>(this.localStorageSvc.getItem<boolean>(MECC_SIMULATION_MODE_KEY) || false);
   initialTab = signal<ActiveTab | null>(null);
   isLogoutConfirmVisible = signal(false);
+
+  // GPS State
+  gpsStatus = signal<GpsStatus>('IDLE');
+  currentPosition = signal<Position | null>(null);
 
   // Signals for backend capabilities and configuration
   backendCapabilities = signal<string[]>([]);

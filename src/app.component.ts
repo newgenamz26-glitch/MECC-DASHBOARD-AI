@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, inject, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, effect, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { ProgramSelectorComponent } from './components/program-selector/program-selector.component';
@@ -12,6 +12,7 @@ import { ResponderLoginComponent } from './components/responder-login/responder-
 import { SimulationService } from './services/simulation.service';
 import { FeedbackFormComponent } from './components/feedback-form/feedback-form.component';
 import { ResponderDashboardComponent } from './components/responder-dashboard/responder-dashboard.component';
+import { GpsService } from './services/gps.service';
 
 type ActiveTab = 'dashboard' | 'program' | 'settings';
 
@@ -36,14 +37,34 @@ export class AppComponent {
   private apiSvc = inject(ApiService);
   private notificationSvc = inject(NotificationService);
   private simulationSvc = inject(SimulationService);
+  private gpsSvc = inject(GpsService);
   
   activeTab = signal<ActiveTab>('dashboard');
   isOutdatedBackendWarningShown = signal(false);
   isFeedbackModalVisible = signal(false);
   
+  gpsStatusMessage = computed(() => {
+    switch (this.stateSvc.gpsStatus()) {
+      case 'CONNECTED': return 'GPS OK';
+      case 'REQUESTING': return 'Mencari...';
+      case 'ERROR': return 'GPS Ralat';
+      case 'UNSUPPORTED': return 'GPS Tiada';
+      default: return 'GPS Putus';
+    }
+  });
+
+  isGpsConnected = computed(() => this.stateSvc.gpsStatus() === 'CONNECTED');
+
+  currentLocationDisplay = computed(() => {
+    const pos = this.stateSvc.currentPosition();
+    if (!pos) return '';
+    return `Lat: ${pos.latitude.toFixed(4)}, Lon: ${pos.longitude.toFixed(4)}`;
+  });
+
   private statusCheckInterval: any;
 
   constructor() {
+    this.gpsSvc.startWatching(); // Start GPS tracking immediately on app load.
     this.apiSvc.primeSuggestionCache(); // Prime cache on startup regardless of login state.
 
     effect((onCleanup) => {

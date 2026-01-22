@@ -1,14 +1,15 @@
-import { Component, ChangeDetectionStrategy, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, OnInit, OnDestroy, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { StateService } from '../../services/state.service';
 import { ApiService } from '../../services/api.service';
 import { Program } from '../../models';
 import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicator.component';
+import { AiAssistantComponent } from '../ai-assistant/ai-assistant.component';
 
 @Component({
   selector: 'app-responder-dashboard',
   standalone: true,
-  imports: [CommonModule, LoadingIndicatorComponent],
+  imports: [CommonModule, LoadingIndicatorComponent, AiAssistantComponent],
   templateUrl: './responder-dashboard.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -19,6 +20,25 @@ export class ResponderDashboardComponent implements OnInit, OnDestroy {
   activePrograms = signal<Program[]>([]);
   isLoading = signal(true);
   error = signal<string | null>(null);
+  isAiAssistantVisible = signal(false);
+
+  gpsStatusMessage = computed(() => {
+    switch (this.stateSvc.gpsStatus()) {
+      case 'CONNECTED': return 'GPS OK';
+      case 'REQUESTING': return 'Mencari...';
+      case 'ERROR': return 'GPS Ralat';
+      case 'UNSUPPORTED': return 'GPS Tiada';
+      default: return 'GPS Putus';
+    }
+  });
+
+  isGpsConnected = computed(() => this.stateSvc.gpsStatus() === 'CONNECTED');
+
+  currentLocationDisplay = computed(() => {
+    const pos = this.stateSvc.currentPosition();
+    if (!pos) return '';
+    return `Lat: ${pos.latitude.toFixed(4)}, Lon: ${pos.longitude.toFixed(4)}`;
+  });
 
   private refreshInterval: any;
 
@@ -50,6 +70,14 @@ export class ResponderDashboardComponent implements OnInit, OnDestroy {
 
   confirmLogout(): void {
     this.stateSvc.isLogoutConfirmVisible.set(true);
+  }
+
+  showAiAssistant(): void {
+    this.isAiAssistantVisible.set(true);
+  }
+
+  hideAiAssistant(): void {
+    this.isAiAssistantVisible.set(false);
   }
 
   formatTime(timeString?: string): string {

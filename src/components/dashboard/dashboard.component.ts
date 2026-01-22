@@ -5,10 +5,11 @@ import { ApiService } from '../../services/api.service';
 import { NotificationService } from '../../services/notification.service';
 import { Attendance, CaseReport, Checkpoint, Ambulance, OtherInfo } from '../../models';
 import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicator.component';
+import { FacilityFinderComponent } from '../facility-finder/facility-finder.component';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule, LoadingIndicatorComponent],
+  imports: [CommonModule, LoadingIndicatorComponent, FacilityFinderComponent],
   templateUrl: './dashboard.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -248,6 +249,16 @@ export class DashboardComponent implements OnDestroy {
   getFormattedTime(dateString: string | null): string {
     if (!dateString) return "-";
     return new Date(dateString).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  getFormattedDateTimeShort(dateString: string | null): string {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    const time = date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    const day = ('0' + date.getDate()).slice(-2);
+    const month = ('0' + (date.getMonth() + 1)).slice(-2);
+    const year = date.getFullYear().toString().slice(-2);
+    return `${time}\n${day}/${month}/${year}`;
   }
 
   getFormattedDateTime(dateString: string | null): string {
