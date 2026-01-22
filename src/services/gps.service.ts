@@ -28,6 +28,7 @@ export class GpsService implements OnDestroy {
       (position) => {
         // We have a position, so we are connected
         this.stateSvc.gpsStatus.set('CONNECTED');
+        this.stateSvc.gpsErrorMessage.set(null); // Clear error on success
         this.stateSvc.currentPosition.set({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
@@ -36,7 +37,13 @@ export class GpsService implements OnDestroy {
       },
       (error) => {
         console.error('GPS Error:', error);
-        this.stateSvc.gpsStatus.set('ERROR');
+        if (error.code === error.PERMISSION_DENIED) {
+            this.stateSvc.gpsStatus.set('ERROR');
+            this.stateSvc.gpsErrorMessage.set('Kebenaran lokasi ditolak. Sila benarkan akses dalam tetapan pelayar anda.');
+        } else {
+            this.stateSvc.gpsStatus.set('ERROR');
+            this.stateSvc.gpsErrorMessage.set('Gagal mendapatkan lokasi GPS. Pastikan GPS peranti anda aktif.');
+        }
         this.stateSvc.currentPosition.set(null);
       },
       {
@@ -73,12 +80,19 @@ export class GpsService implements OnDestroy {
             accuracy: position.coords.accuracy,
           };
           this.stateSvc.gpsStatus.set('CONNECTED');
+          this.stateSvc.gpsErrorMessage.set(null); // Clear error
           this.stateSvc.currentPosition.set(pos);
           resolve({ status: 'CONNECTED', position: pos });
         },
         (error) => {
           console.error('GPS Error (one-time test):', error);
-          this.stateSvc.gpsStatus.set('ERROR');
+           if (error.code === error.PERMISSION_DENIED) {
+              this.stateSvc.gpsStatus.set('ERROR');
+              this.stateSvc.gpsErrorMessage.set('Kebenaran lokasi ditolak. Sila benarkan akses dalam tetapan pelayar anda.');
+          } else {
+              this.stateSvc.gpsStatus.set('ERROR');
+              this.stateSvc.gpsErrorMessage.set('Gagal mendapatkan lokasi GPS. Pastikan GPS peranti anda aktif.');
+          }
           this.stateSvc.currentPosition.set(null);
           resolve({ status: 'ERROR', position: null });
         },

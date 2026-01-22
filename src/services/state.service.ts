@@ -46,6 +46,7 @@ export class StateService {
   // GPS State
   gpsStatus = signal<GpsStatus>('IDLE');
   currentPosition = signal<Position | null>(null);
+  gpsErrorMessage = signal<string | null>(null);
 
   // Signals for backend capabilities and configuration
   backendCapabilities = signal<string[]>([]);
