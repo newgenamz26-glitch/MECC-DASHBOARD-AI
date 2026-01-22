@@ -1,5 +1,8 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed, OnDestroy, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { Subject, timer, of } from 'rxjs';
+import { switchMap, takeUntil } from 'rxjs/operators';
 import { StateService } from '../../services/state.service';
 import { ApiService } from '../../services/api.service';
 import { NotificationService } from '../../services/notification.service';
@@ -13,7 +16,7 @@ import { FacilityFinderComponent } from '../facility-finder/facility-finder.comp
   templateUrl: './dashboard.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DashboardComponent implements OnDestroy {
+export class DashboardComponent implements OnInit, OnDestroy {
   stateSvc = inject(StateService);
   private apiSvc = inject(ApiService);
   private notificationSvc = inject(NotificationService);
@@ -43,60 +46,56 @@ export class DashboardComponent implements OnDestroy {
   isLoadingDetails = signal(false);
   errorDetails = signal<string | null>(null);
   
-  private attendanceInterval: any;
-  private caseReportInterval: any;
-  private detailsInterval: any;
+  private destroy$ = new Subject<void>();
   private readonly REFRESH_INTERVAL_MS = 10000; // Auto-refresh every 10 seconds
   private readonly SIM_REFRESH_INTERVAL_MS = 2000; // Faster refresh for simulation mode
 
-  constructor() {
-    effect((onCleanup) => {
-      const activeProgram = this.stateSvc.activeProgram();
-      const isSimMode = this.stateSvc.isSimulationMode();
-      const refreshInterval = isSimMode ? this.SIM_REFRESH_INTERVAL_MS : this.REFRESH_INTERVAL_MS;
-
-      onCleanup(() => {
-        if (this.attendanceInterval) {
-          clearInterval(this.attendanceInterval);
-          this.attendanceInterval = null;
-        }
-        if (this.caseReportInterval) {
-          clearInterval(this.caseReportInterval);
-          this.caseReportInterval = null;
-        }
-        if (this.detailsInterval) {
-          clearInterval(this.detailsInterval);
-          this.detailsInterval = null;
-        }
+  ngOnInit(): void {
+    toObservable(this.stateSvc.activeProgram)
+      .pipe(
+        switchMap(activeProgram => {
+          if (activeProgram) {
+            const isSimMode = this.stateSvc.isSimulationMode();
+            const refreshInterval = isSimMode ? this.SIM_REFRESH_INTERVAL_MS : this.REFRESH_INTERVAL_MS;
+            // Fetch data immediately, then poll at the specified interval
+            return timer(0, refreshInterval);
+          } else {
+            // No active program, so we reset state and stop polling.
+            this.resetState();
+            return of(); 
+          }
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        // This subscription triggers on each emission from the timer
+        this.fetchAllData();
       });
-
-      if (activeProgram) {
-        this.fetchAttendance();
-        this.fetchCaseReports();
-        this.fetchProgramDetails();
-        this.attendanceInterval = setInterval(() => this.fetchAttendance(), refreshInterval);
-        this.caseReportInterval = setInterval(() => this.fetchCaseReports(), refreshInterval);
-        this.detailsInterval = setInterval(() => this.fetchProgramDetails(), refreshInterval);
-      } else {
-        // Reset all states when no program is active
-        this.attendanceList.set([]);
-        this.caseReports.set([]);
-        this.checkpoints.set([]);
-        this.ambulances.set([]);
-        this.isLoading.set(false);
-        this.isLoadingCases.set(false);
-        this.isLoadingDetails.set(false);
-        this.error.set(null);
-        this.errorCases.set(null);
-        this.errorDetails.set(null);
-      }
-    });
   }
 
   ngOnDestroy(): void {
-    if (this.attendanceInterval) clearInterval(this.attendanceInterval);
-    if (this.caseReportInterval) clearInterval(this.caseReportInterval);
-    if (this.detailsInterval) clearInterval(this.detailsInterval);
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private fetchAllData(): void {
+    if (!this.stateSvc.activeProgram()) return;
+    this.fetchAttendance();
+    this.fetchCaseReports();
+    this.fetchProgramDetails();
+  }
+  
+  private resetState(): void {
+    this.attendanceList.set([]);
+    this.caseReports.set([]);
+    this.checkpoints.set([]);
+    this.ambulances.set([]);
+    this.isLoading.set(false);
+    this.isLoadingCases.set(false);
+    this.isLoadingDetails.set(false);
+    this.error.set(null);
+    this.errorCases.set(null);
+    this.errorDetails.set(null);
   }
 
   toggleCaseLog(): void {
@@ -111,7 +110,6 @@ export class DashboardComponent implements OnDestroy {
     const isSimMode = this.stateSvc.isSimulationMode();
 
     if (!isSimMode && this.isLoading()) return;
-    if (!this.stateSvc.activeProgram()) return;
 
     if (!isSimMode) {
       this.isLoading.set(true);
