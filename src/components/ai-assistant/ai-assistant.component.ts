@@ -43,8 +43,11 @@ export class AiAssistantComponent implements OnInit {
     }
   }
 
-  openInMaps(facilityName: string): void {
-    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(facilityName)}`;
+  openInMaps(facility: Facility): void {
+    let url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(facility.nama)}`;
+    if (facility.googleMapsPlaceId) {
+      url += `&query_place_id=${facility.googleMapsPlaceId}`;
+    }
     window.open(url, '_blank');
   }
 }

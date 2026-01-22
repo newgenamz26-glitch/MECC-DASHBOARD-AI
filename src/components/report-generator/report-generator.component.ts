@@ -51,12 +51,13 @@ export class ReportGeneratorComponent implements OnInit {
     this.isLoadingPrograms.set(true);
     try {
       const data = await this.apiSvc.getPrograms();
-      data.sort((a, b) => {
+      const filteredData = data.filter(p => p.status === 'Aktif' || p.status === 'Selesai');
+      filteredData.sort((a, b) => {
           const dateA = a.tarikh ? new Date(a.tarikh).getTime() : 0;
           const dateB = b.tarikh ? new Date(b.tarikh).getTime() : 0;
           return dateB - dateA;
       });
-      this.programs.set(data);
+      this.programs.set(filteredData);
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Gagal memuat turun senarai program.';
       this.notificationSvc.show('error', 'Ralat Muat Turun', msg);
