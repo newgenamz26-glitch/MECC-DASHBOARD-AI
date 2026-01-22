@@ -1,3 +1,4 @@
+
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 // FIX: Consolidate RxJS imports to the modern path to fix type inference issues.
@@ -17,7 +18,7 @@ interface BackendConfig {
   providedIn: 'root',
 })
 export class ApiService {
-  // FIX: Explicitly typing the injected HttpClient to fix an issue where it was being inferred as 'unknown'.
+  // FIX: Add explicit type to `http` to resolve type inference issue with `inject()`.
   private http: HttpClient = inject(HttpClient);
   private stateSvc = inject(StateService);
   private localStorageSvc = inject(LocalStorageService);

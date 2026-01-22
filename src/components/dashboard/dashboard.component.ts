@@ -1,8 +1,7 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { Subject, timer, of } from 'rxjs';
-import { switchMap, takeUntil } from 'rxjs/operators';
+import { Subject, timer, of, switchMap, takeUntil } from 'rxjs';
 import { StateService } from '../../services/state.service';
 import { ApiService } from '../../services/api.service';
 import { NotificationService } from '../../services/notification.service';

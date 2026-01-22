@@ -1,3 +1,4 @@
+
 import { Component, ChangeDetectionStrategy, input, output, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -19,7 +20,7 @@ export class ProgramEditComponent implements OnInit {
 
   private apiSvc = inject(ApiService);
   private notificationSvc = inject(NotificationService);
-  // FIX: Explicitly type injected FormBuilder to fix type inference issues.
+  // FIX: Add explicit type to `fb` to resolve type inference issue with `inject()`.
   private fb: FormBuilder = inject(FormBuilder);
   
   isSubmitting = signal(false);
