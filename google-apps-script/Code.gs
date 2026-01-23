@@ -489,37 +489,54 @@ function mecc_updateProgramDetail(payload) {
   var jenis = sheet.getRange(rowToUpdate, headerMap["Jenis"] + 1).getValue();
   
   if (jenis === 'Cekpoint') {
-    sheet.getRange(rowToUpdate, headerMap["Kolum_A"] + 1).setValue(payload.name);
-    sheet.getRange(rowToUpdate, headerMap["Kolum_B"] + 1).setValue(payload.location);
-    sheet.getRange(rowToUpdate, headerMap["Kolum_C"] + 1).setValue(payload.pic);
-    sheet.getRange(rowToUpdate, headerMap["Kolum_D"] + 1).setValue(payload.callSign);
-    sheet.getRange(rowToUpdate, headerMap["Kolum_E"] + 1).setValue(payload.crew);
+    if (payload.name !== undefined) sheet.getRange(rowToUpdate, headerMap["Kolum_A"] + 1).setValue(payload.name);
+    if (payload.location !== undefined) sheet.getRange(rowToUpdate, headerMap["Kolum_B"] + 1).setValue(payload.location);
+    if (payload.pic !== undefined) sheet.getRange(rowToUpdate, headerMap["Kolum_C"] + 1).setValue(payload.pic);
+    if (payload.callSign !== undefined) sheet.getRange(rowToUpdate, headerMap["Kolum_D"] + 1).setValue(payload.callSign);
+    if (payload.crew !== undefined) sheet.getRange(rowToUpdate, headerMap["Kolum_E"] + 1).setValue(payload.crew);
   } else if (jenis === 'Ambulan') {
-    sheet.getRange(rowToUpdate, headerMap["Kolum_A"] + 1).setValue(payload.callSign);
-    sheet.getRange(rowToUpdate, headerMap["Kolum_B"] + 1).setValue(payload.vehicleNumber);
-    sheet.getRange(rowToUpdate, headerMap["Kolum_C"] + 1).setValue(payload.crew);
+    if (payload.callSign !== undefined) sheet.getRange(rowToUpdate, headerMap["Kolum_A"] + 1).setValue(payload.callSign);
+    if (payload.vehicleNumber !== undefined) sheet.getRange(rowToUpdate, headerMap["Kolum_B"] + 1).setValue(payload.vehicleNumber);
+    if (payload.crew !== undefined) sheet.getRange(rowToUpdate, headerMap["Kolum_C"] + 1).setValue(payload.crew);
   } else if (jenis === 'Lain') {
-    sheet.getRange(rowToUpdate, headerMap["Kolum_A"] + 1).setValue(payload.title);
-    sheet.getRange(rowToUpdate, headerMap["Kolum_B"] + 1).setValue(payload.details);
+    if (payload.title !== undefined) sheet.getRange(rowToUpdate, headerMap["Kolum_A"] + 1).setValue(payload.title);
+    if (payload.details !== undefined) sheet.getRange(rowToUpdate, headerMap["Kolum_B"] + 1).setValue(payload.details);
   }
 
   var updatedRowValues = sheet.getRange(rowToUpdate, 1, 1, sheet.getLastColumn()).getValues()[0];
-  var updatedData = {
+  
+  var baseResponse = {
       id: updatedRowValues[headerMap.ID_Detail],
       programId: updatedRowValues[headerMap.ID_Program],
       jenis: updatedRowValues[headerMap.Jenis],
-      timestamp: updatedRowValues[headerMap.DirekodkanPada],
-      name: updatedRowValues[headerMap.Kolum_A],
-      location: updatedRowValues[headerMap.Kolum_B],
-      pic: updatedRowValues[headerMap.Kolum_C],
-      callSign: updatedRowValues[headerMap.Kolum_D],
-      crew: updatedRowValues[headerMap.Kolum_E],
-      title: updatedRowValues[headerMap.Kolum_A],
-      details: updatedRowValues[headerMap.Kolum_B],
-      vehicleNumber: updatedRowValues[headerMap.Kolum_B]
+      timestamp: updatedRowValues[headerMap.DirekodkanPada]
   };
 
-  return mecc_response(updatedData);
+  var finalResponse;
+  if (jenis === 'Cekpoint') {
+    finalResponse = Object.assign(baseResponse, { 
+      name: updatedRowValues[headerMap.Kolum_A], 
+      location: updatedRowValues[headerMap.Kolum_B], 
+      pic: updatedRowValues[headerMap.Kolum_C], 
+      callSign: updatedRowValues[headerMap.Kolum_D], 
+      crew: updatedRowValues[headerMap.Kolum_E] 
+    });
+  } else if (jenis === 'Ambulan') {
+    finalResponse = Object.assign(baseResponse, { 
+      callSign: updatedRowValues[headerMap.Kolum_A], 
+      vehicleNumber: updatedRowValues[headerMap.Kolum_B], 
+      crew: updatedRowValues[headerMap.Kolum_C] 
+    });
+  } else if (jenis === 'Lain') {
+    finalResponse = Object.assign(baseResponse, { 
+      title: updatedRowValues[headerMap.Kolum_A], 
+      details: updatedRowValues[headerMap.Kolum_B] 
+    });
+  } else {
+    finalResponse = baseResponse;
+  }
+
+  return mecc_response(finalResponse);
 }
 
 

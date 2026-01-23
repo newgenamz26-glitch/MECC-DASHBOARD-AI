@@ -49,8 +49,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private readonly REFRESH_INTERVAL_MS = 10000; // Auto-refresh every 10 seconds
   private readonly SIM_REFRESH_INTERVAL_MS = 2000; // Faster refresh for simulation mode
 
+  private activeProgram$ = toObservable(this.stateSvc.activeProgram);
+
   ngOnInit(): void {
-    toObservable(this.stateSvc.activeProgram)
+    this.activeProgram$
       .pipe(
         switchMap(activeProgram => {
           if (activeProgram) {

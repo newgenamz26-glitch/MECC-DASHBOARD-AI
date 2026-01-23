@@ -37,7 +37,7 @@ export class UserGuideComponent {
       icon: '🚀',
       content: `
         <p class="text-slate-600">Setiap sesi bermula di skrin utama di mana anda memilih mod operasi.</p>
-        <img src="https://picsum.photos/id/1015/400/250" alt="Skrin Pemilihan Mod" class="my-3 rounded-lg shadow-md border border-slate-200" />
+        <img src="https://placehold.co/400x250/0c4a6e/white?text=MECC+AMAL\n\n[+Mod+Langsung+]\n\n[+Mod+Simulasi+]\n\n[+Log+Masuk+Petugas+]" alt="Skrin Pemilihan Mod" class="my-3 rounded-lg shadow-md border border-slate-200" />
         <ul class="list-disc list-inside mt-3 space-y-2 text-slate-600 text-sm">
           <li><strong>Mod Langsung:</strong> Sambung ke pangkalan data Google Sheets sebenar untuk menguruskan acara secara langsung.</li>
           <li><strong>Mod Simulasi:</strong> Gunakan data sampel untuk latihan atau demonstrasi tanpa menjejaskan data sebenar.</li>
@@ -49,7 +49,7 @@ export class UserGuideComponent {
       icon: '⚙️',
       content: `
         <p class="text-slate-600">Sebelum memulakan program, semua konfigurasi dilakukan di sini.</p>
-        <img src="https://picsum.photos/id/1016/400/250" alt="Tab Tetapan" class="my-3 rounded-lg shadow-md border border-slate-200" />
+        <img src="https://placehold.co/400x250/f0f9ff/334155?text=Pengurusan+Program\n\nTetapan+Cloud\n\nDiagnostik+&+Alat+Bantuan" alt="Tab Tetapan" class="my-3 rounded-lg shadow-md border border-slate-200" />
         <ul class="list-disc list-inside mt-3 space-y-2 text-slate-600 text-sm">
           <li><strong>Sambungan Cloud:</strong> Sambungkan aplikasi ke URL Google Apps Script anda.</li>
           <li><strong>Cipta Program Baru:</strong> Rekodkan butiran awal program baru seperti nama, tarikh, dan lokasi.</li>
@@ -62,7 +62,7 @@ export class UserGuideComponent {
       icon: '📂',
       content: `
         <p class="text-slate-600">Setelah program dicipta, uruskannya melalui tab ini.</p>
-        <img src="https://picsum.photos/id/1018/400/250" alt="Tab Program" class="my-3 rounded-lg shadow-md border border-slate-200" />
+        <img src="https://placehold.co/400x250/f0f9ff/334155?text=Senarai+Program\n\n[+Program+A+(Aktif)+]\n\n[+Program+B+]" alt="Tab Program" class="my-3 rounded-lg shadow-md border border-slate-200" />
         <ul class="list-disc list-inside mt-3 space-y-2 text-slate-600 text-sm">
           <li><strong>Aktifkan Program:</strong> Pilih satu program untuk dipantau di Dashboard. Hanya satu program boleh aktif pada satu masa.</li>
           <li><strong>Tambah Maklumat Operasi:</strong> Klik butang 'Maklumat' untuk menambah butiran penting seperti Cekpoint dan Ambulans.</li>
@@ -75,7 +75,7 @@ export class UserGuideComponent {
       icon: '📊',
       content: `
         <p class="text-slate-600">Dashboard adalah pusat kawalan anda semasa program berjalan.</p>
-        <img src="https://picsum.photos/id/1025/400/250" alt="Tab Dashboard" class="my-3 rounded-lg shadow-md border border-slate-200" />
+        <img src="https://placehold.co/400x250/f0f9ff/334155?text=Program+Aktif:...\n\nStatistik\n\nLaporan+Kes\n\nSenarai+Bertugas" alt="Tab Dashboard" class="my-3 rounded-lg shadow-md border border-slate-200" />
         <ul class="list-disc list-inside mt-3 space-y-2 text-slate-600 text-sm">
           <li><strong>Data Masa Nyata:</strong> Pantau laporan kes dan kehadiran petugas yang dikemaskini secara automatik.</li>
           <li><strong>Maklumat Operasi:</strong> Lihat senarai Cekpoint dan Ambulans yang sedang bertugas.</li>
@@ -88,7 +88,7 @@ export class UserGuideComponent {
       icon: '✨',
       content: `
         <p class="text-slate-600">Gunakan pembantu AI untuk membuat keputusan pantas di lapangan.</p>
-        <img src="https://picsum.photos/id/10/400/250" alt="Bantuan AI" class="my-3 rounded-lg shadow-md border border-slate-200" />
+        <img src="https://placehold.co/400x250/f0f9ff/115e59?text=Hasil+Carian+AI\n\n-Hospital+A+(1.2km)\n-Hospital+B+(3.5km)\n\n-Klinik+X+(800m)" alt="Bantuan AI" class="my-3 rounded-lg shadow-md border border-slate-200" />
         <p class="mt-3 text-slate-600 text-sm">Fungsi <strong>'Carian Fasiliti Perubatan'</strong> menggunakan GPS semasa anda untuk mencari hospital dan klinik terdekat, lengkap dengan anggaran jarak perjalanan sebenar dan pautan ke Peta Google.</p>
       `
     },
@@ -97,7 +97,7 @@ export class UserGuideComponent {
       icon: '📄',
       content: `
         <p class="text-slate-600">Setelah program selesai, jana laporan lengkap di tab Laporan.</p>
-        <img src="https://picsum.photos/id/24/400/250" alt="Tab Laporan" class="my-3 rounded-lg shadow-md border border-slate-200" />
+        <img src="https://placehold.co/400x250/f0f9ff/334155?text=Pilih+Program:..v\n\n[Pratonton+Laporan]\n\nJana+Laporan+PDF" alt="Tab Laporan" class="my-3 rounded-lg shadow-md border border-slate-200" />
         <ul class="list-disc list-inside mt-3 space-y-2 text-slate-600 text-sm">
           <li>Pilih program yang telah selesai daripada senarai.</li>
           <li>Sistem akan mengumpul semua data berkaitan secara automatik.</li>
