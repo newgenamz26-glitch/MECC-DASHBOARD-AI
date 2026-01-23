@@ -113,8 +113,8 @@ export class AppComponent {
       // Use a small delay to ensure the app has rendered before showing the notification
       setTimeout(() => {
         const message = `Sistem telah dikemaskini kepada v${this.appVersion}. Sila muat semula untuk mendapatkan fungsi terkini.`;
-        // duration 0 makes it persistent until closed or refreshed
-        this.notificationSvc.show('version', 'Versi Baru Tersedia!', message, 0); 
+        // Show notification which will auto-hide after the default 5 seconds.
+        this.notificationSvc.show('version', 'Versi Baru Tersedia!', message); 
         this.localStorageSvc.setItem(LAST_SEEN_VERSION_KEY, APP_VERSION);
       }, 1000);
     }
