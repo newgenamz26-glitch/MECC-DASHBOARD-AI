@@ -97,26 +97,6 @@
       }
   </main>
 
-  <!-- New Version Notification Banner -->
-  @if (isNewVersionAvailable()) {
-    <div class="fixed bottom-24 left-1/2 -translate-x-1/2 w-[95%] max-w-md z-50 p-4 rounded-2xl shadow-2xl bg-gradient-to-tr from-sky-600 to-teal-500 text-white animate-fade-in-up">
-      <div class="flex items-start gap-4">
-        <div class="bg-white/20 p-2 rounded-full mt-1">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
-        </div>
-        <div class="flex-grow">
-          <h4 class="font-bold">Versi Baru Tersedia!</h4>
-          <p class="text-sm text-white/90 mt-1">
-            Sistem telah dikemaskini kepada v{{ appVersion }} dengan fungsi dan penambahbaikan baru.
-          </p>
-        </div>
-        <button (click)="dismissVersionNotification()" class="p-2 -mt-1 -mr-1 text-white/70 hover:text-white transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-      </div>
-    </div>
-  }
-
   <!-- Bottom Navigation -->
   <div class="fixed bottom-0 left-0 w-full bg-white/80 backdrop-blur-xl border-t border-sky-50 flex justify-around p-5 z-50 rounded-t-[32px] shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.05)]">
       <button (click)="navigate('dashboard')" class="nav-btn flex flex-col items-center gap-1.5 text-slate-400 transition-all duration-300" [class.text-sky-600]="activeTab() === 'dashboard'" [class.-translate-y-1]="activeTab() === 'dashboard'">
@@ -126,6 +106,10 @@
       <button (click)="navigate('program')" class="nav-btn flex flex-col items-center gap-1.5 text-slate-400 transition-all duration-300" [class.text-sky-600]="activeTab() === 'program'" [class.-translate-y-1]="activeTab() === 'program'">
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           <span class="text-[9px] font-black uppercase tracking-widest">Program</span>
+      </button>
+      <button (click)="showAiAssistant()" title="Bantuan AI: Cari Fasiliti Terdekat" class="nav-btn flex flex-col items-center gap-1.5 text-slate-400 transition-all duration-300 hover:text-teal-500 active:-translate-y-1">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+          <span class="text-[9px] font-black uppercase tracking-widest">Bantuan AI</span>
       </button>
       <button (click)="navigate('report')" class="nav-btn flex flex-col items-center gap-1.5 text-slate-400 transition-all duration-300" [class.text-sky-600]="activeTab() === 'report'" [class.-translate-y-1]="activeTab() === 'report'">
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
@@ -163,6 +147,11 @@
         </div>
     </div>
   </div>
+}
+
+<!-- AI Assistant Modal -->
+@if (isAiAssistantVisible()) {
+  <app-ai-assistant (close)="hideAiAssistant()"></app-ai-assistant>
 }
 
 <!-- Interactive User Guide -->

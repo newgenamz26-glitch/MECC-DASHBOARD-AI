@@ -16,6 +16,7 @@ import { GpsService } from './services/gps.service';
 import { UserGuideComponent } from './components/user-guide/user-guide.component';
 import { LocalStorageService } from './services/local-storage.service';
 import { ReportGeneratorComponent } from './components/report-generator/report-generator.component';
+import { AiAssistantComponent } from './components/ai-assistant/ai-assistant.component';
 
 type ActiveTab = 'dashboard' | 'program' | 'settings' | 'report';
 
@@ -36,6 +37,7 @@ const LAST_SEEN_VERSION_KEY = 'MECC_LAST_SEEN_VERSION_V1';
     ResponderDashboardComponent,
     UserGuideComponent,
     ReportGeneratorComponent,
+    AiAssistantComponent,
   ],
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -51,7 +53,7 @@ export class AppComponent {
   activeTab = signal<ActiveTab>('dashboard');
   isOutdatedBackendWarningShown = signal(false);
   isFeedbackModalVisible = signal(false);
-  isNewVersionAvailable = signal(false);
+  isAiAssistantVisible = signal(false);
   readonly appVersion = APP_VERSION;
   
   gpsStatusMessage = computed(() => {
@@ -108,13 +110,14 @@ export class AppComponent {
   private checkAppVersion(): void {
     const lastSeenVersion = this.localStorageSvc.getItem<string>(LAST_SEEN_VERSION_KEY);
     if (lastSeenVersion !== APP_VERSION) {
-      this.isNewVersionAvailable.set(true);
+      // Use a small delay to ensure the app has rendered before showing the notification
+      setTimeout(() => {
+        const message = `Sistem telah dikemaskini kepada v${this.appVersion}. Sila muat semula untuk mendapatkan fungsi terkini.`;
+        // duration 0 makes it persistent until closed or refreshed
+        this.notificationSvc.show('version', 'Versi Baru Tersedia!', message, 0); 
+        this.localStorageSvc.setItem(LAST_SEEN_VERSION_KEY, APP_VERSION);
+      }, 1000);
     }
-  }
-  
-  dismissVersionNotification(): void {
-    this.localStorageSvc.setItem(LAST_SEEN_VERSION_KEY, APP_VERSION);
-    this.isNewVersionAvailable.set(false);
   }
 
   async checkCloudStatus() {
@@ -178,6 +181,14 @@ export class AppComponent {
 
   navigate(tab: ActiveTab): void {
     this.activeTab.set(tab);
+  }
+
+  showAiAssistant(): void {
+    this.isAiAssistantVisible.set(true);
+  }
+
+  hideAiAssistant(): void {
+    this.isAiAssistantVisible.set(false);
   }
 
   showFeedbackModal(): void {

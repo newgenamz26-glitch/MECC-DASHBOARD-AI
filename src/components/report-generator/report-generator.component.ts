@@ -17,6 +17,12 @@ interface ReportData {
   generatedAt: string;
 }
 
+interface GuideStep {
+  title: string;
+  content: string;
+  icon: string;
+}
+
 @Component({
   selector: 'app-report-generator',
   imports: [CommonModule, LoadingIndicatorComponent],
@@ -42,6 +48,58 @@ export class ReportGeneratorComponent implements OnInit {
     if (!id) return null;
     return this.programs().find(p => p.id === id) || null;
   });
+
+  // --- User Guide Properties ---
+  isGuideVisible = signal(false);
+  isGeneratingGuidePdf = signal(false);
+
+  readonly guideSteps: GuideStep[] = [
+    {
+      title: 'Pengenalan',
+      icon: '📄',
+      content: `
+        <p class="text-slate-600">Selamat datang ke Penjana Laporan. Modul ini membolehkan anda mengumpul semua data berkaitan satu program dan mengeksportnya sebagai fail PDF yang kemas untuk tujuan dokumentasi dan arkib.</p>
+      `
+    },
+    {
+      title: 'Langkah 1: Pilih Program',
+      icon: '👆',
+      content: `
+        <p class="text-slate-600">Gunakan menu lungsur turun (dropdown) di bawah untuk memilih program yang anda ingin jana laporannya.</p>
+        <p class="mt-2 text-slate-600 text-sm">Hanya program yang berstatus <strong>'Aktif'</strong> atau <strong>'Selesai'</strong> akan dipaparkan dalam senarai.</p>
+      `
+    },
+    {
+      title: 'Langkah 2: Semak Data',
+      icon: '🔍',
+      content: `
+        <p class="text-slate-600">Setelah program dipilih, sistem akan memuat turun semua data yang berkaitan secara automatik, termasuk:</p>
+        <ul class="list-disc list-inside mt-3 space-y-2 text-slate-600 text-sm">
+          <li>Ringkasan Program</li>
+          <li>Laporan Kes yang direkodkan</li>
+          <li>Log Kehadiran Petugas</li>
+          <li>Senarai Aset Operasi (Cekpoint & Ambulans)</li>
+        </ul>
+        <p class="mt-2 text-slate-600">Anda boleh menyemak data ini pada pratonton laporan di bawah.</p>
+      `
+    },
+    {
+      title: 'Langkah 3: Muat Turun PDF',
+      icon: '💾',
+      content: `
+        <p class="text-slate-600">Apabila anda berpuas hati dengan data yang dipaparkan, klik butang <strong>"Jana Laporan PDF"</strong>.</p>
+        <p class="mt-2 text-slate-600">Sistem akan menukar pratonton laporan kepada fail PDF yang sedia untuk dimuat turun dan disimpan.</p>
+        <div class="mt-4 p-3 bg-sky-100/50 border border-sky-200 rounded-lg text-xs text-sky-800">
+          <strong>Tip:</strong> Anda juga boleh memuat turun panduan ini sebagai fail PDF menggunakan butang di bawah.
+        </div>
+      `
+    }
+  ];
+  
+  currentGuideStepIndex = signal(0);
+  currentGuideStep = computed(() => this.guideSteps[this.currentGuideStepIndex()]);
+  guideProgressPercentage = computed(() => ((this.currentGuideStepIndex() + 1) / this.guideSteps.length) * 100);
+
 
   ngOnInit(): void {
     this.fetchPrograms();
@@ -164,6 +222,79 @@ export class ReportGeneratorComponent implements OnInit {
         this.notificationSvc.show('error', 'Ralat PDF', 'Gagal menjana fail PDF.');
     } finally {
         this.isGeneratingPdf.set(false);
+    }
+  }
+
+  toggleGuide(): void {
+    this.isGuideVisible.update(v => !v);
+    this.currentGuideStepIndex.set(0);
+  }
+
+  nextGuideStep(): void {
+    if (this.currentGuideStepIndex() < this.guideSteps.length - 1) {
+      this.currentGuideStepIndex.update(i => i + 1);
+    }
+  }
+
+  previousGuideStep(): void {
+    if (this.currentGuideStepIndex() > 0) {
+      this.currentGuideStepIndex.update(i => i - 1);
+    }
+  }
+  
+  async downloadGuideAsPdf(): Promise<void> {
+    const guideContent = document.getElementById('guide-content-for-pdf');
+    if (!guideContent) {
+      this.notificationSvc.show('error', 'Gagal Jana PDF', 'Elemen panduan tidak ditemui.');
+      return;
+    }
+
+    this.isGeneratingGuidePdf.set(true);
+    
+    try {
+        const canvas = await html2canvas(guideContent, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#ffffff'
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'pt',
+            format: 'a4'
+        });
+
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        const ratio = canvasWidth / canvasHeight;
+        const imgWidth = pdfWidth - 40; // with margin
+        const imgHeight = imgWidth / ratio;
+        
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        let heightLeft = imgHeight;
+        let position = 20; // top margin
+
+        pdf.addImage(imgData, 'PNG', 20, position, imgWidth, imgHeight);
+        heightLeft -= (pdfHeight - 40);
+
+        while (heightLeft > 0) {
+            position = heightLeft - imgHeight + 20;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 20, position, imgWidth, imgHeight);
+            heightLeft -= (pdfHeight - 40);
+        }
+        
+        const fileName = `Panduan-Penjana-Laporan.pdf`;
+        pdf.save(fileName);
+        this.notificationSvc.show('case', 'PDF Dijana', `Fail ${fileName} sedang dimuat turun.`);
+
+    } catch (error) {
+        console.error("Error generating guide PDF:", error);
+        this.notificationSvc.show('error', 'Ralat PDF', 'Gagal menjana fail PDF panduan.');
+    } finally {
+        this.isGeneratingGuidePdf.set(false);
     }
   }
 

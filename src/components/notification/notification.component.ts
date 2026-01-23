@@ -1,5 +1,3 @@
-
-
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { NotificationService } from '../../services/notification.service';
 import { CommonModule } from '@angular/common';
@@ -12,4 +10,8 @@ import { CommonModule } from '@angular/common';
 })
 export class NotificationComponent {
   notificationSvc = inject(NotificationService);
+
+  refreshPage(): void {
+    window.location.reload();
+  }
 }

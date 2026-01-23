@@ -1,7 +1,65 @@
 <div class="space-y-6">
   <!-- Header -->
-  <div class="space-y-2">
+  <div class="space-y-4">
     <h3 class="text-[11px] font-black text-slate-500 uppercase tracking-widest">Penjana Laporan</h3>
+    
+    <!-- User Guide Section -->
+    <div class="bg-white rounded-[32px] shadow-sm border border-sky-50 overflow-hidden">
+      <div (click)="toggleGuide()" class="flex items-center justify-between p-6 cursor-pointer">
+        <div class="flex items-center gap-4">
+          <div class="bg-sky-100 text-sky-600 p-3 rounded-2xl">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          </div>
+          <div class="flex-grow">
+            <h4 class="font-bold text-slate-800">Panduan Pengguna</h4>
+            <p class="text-xs text-slate-500 mt-1">Ketahui cara menggunakan Penjana Laporan.</p>
+          </div>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 transition-transform duration-300" [class.rotate-180]="isGuideVisible()">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </div>
+
+      @if(isGuideVisible()) {
+        <div class="border-t-2 border-dashed border-sky-100 animate-fade-in-up">
+          <div id="guide-content-for-pdf" class="p-6">
+              <!-- Guide Header -->
+              <div class="flex justify-between items-start gap-4">
+                <div class="flex items-center gap-4">
+                  <div class="text-3xl bg-slate-100 p-3 rounded-xl">{{ currentGuideStep().icon }}</div>
+                  <div>
+                    <p class="text-xs font-bold text-slate-400">Langkah {{ currentGuideStepIndex() + 1 }} / {{ guideSteps.length }}</p>
+                    <h3 class="font-bold text-slate-800 text-lg leading-tight">{{ currentGuideStep().title }}</h3>
+                  </div>
+                </div>
+              </div>
+              <!-- Guide Content -->
+              <div class="pt-4 mt-4 border-t border-slate-200 text-sm" [innerHTML]="currentGuideStep().content"></div>
+          </div>
+           <!-- Guide Footer Actions -->
+          <div class="p-4 bg-slate-50/70 border-t border-slate-200 space-y-3">
+             <div class="flex justify-between items-center gap-3">
+                <button (click)="previousGuideStep()" class="text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors px-4 py-2" [class.invisible]="currentGuideStepIndex() === 0">
+                  Kembali
+                </button>
+                <button (click)="nextGuideStep()" class="text-sm font-bold bg-sky-600 text-white px-6 py-2.5 rounded-xl hover:bg-sky-700 transition-colors">
+                   {{ currentGuideStepIndex() === guideSteps.length - 1 ? 'Selesai' : 'Seterusnya' }}
+                </button>
+              </div>
+              <button (click)="downloadGuideAsPdf()" [disabled]="isGeneratingGuidePdf()" class="w-full flex items-center justify-center gap-2 bg-sky-50 text-sky-700 font-bold text-xs py-2 rounded-lg border border-sky-100 hover:bg-sky-100 transition-colors disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed">
+                  @if(isGeneratingGuidePdf()) {
+                    <svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                    <span>Menjana...</span>
+                  } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span>Muat Turun Panduan (PDF)</span>
+                  }
+              </button>
+          </div>
+        </div>
+      }
+    </div>
+
     <div class="bg-white p-6 rounded-[32px] shadow-sm border border-sky-50">
         <h4 class="font-bold text-sky-800 text-base">Pilih Program</h4>
         <p class="text-xs text-slate-400 mt-1">Pilih program untuk menjana laporan terperinci.</p>

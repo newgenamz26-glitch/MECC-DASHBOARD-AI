@@ -59,19 +59,29 @@ export class AiService {
         },
       });
 
-      let responseText = response.text.trim();
+      const responseText = response.text;
+      if (!responseText) {
+        console.error('Gemini API response did not contain a text part.', response);
+        const finishReason = response.candidates?.[0]?.finishReason;
+        if (finishReason === 'SAFETY') {
+          throw new Error('Respons AI disekat kerana tetapan keselamatan. Sila ubah suai prom anda.');
+        }
+        throw new Error('AI tidak memberikan respons teks yang sah. Respons mungkin kosong atau disekat.');
+      }
+
+      let processedText = responseText.trim();
       
       // The model might wrap the JSON in ```json ... ```, so let's strip that.
-      if (responseText.startsWith('```json')) {
-        responseText = responseText.substring(7, responseText.length - 3).trim();
+      if (processedText.startsWith('```json')) {
+        processedText = processedText.substring(7, processedText.length - 3).trim();
       }
 
       // Basic check if the response is a valid JSON array
-      if (responseText.startsWith('[') && responseText.endsWith(']')) {
-         const facilities = JSON.parse(responseText) as Facility[];
+      if (processedText.startsWith('[') && processedText.endsWith(']')) {
+         const facilities = JSON.parse(processedText) as Facility[];
          return facilities;
       } else {
-        console.error('AI returned a non-array JSON response:', responseText);
+        console.error('AI returned a non-array JSON response:', processedText);
         throw new Error('AI tidak memberikan respons yang sah dalam format JSON yang dijangkakan. Sila cuba lagi.');
       }
 

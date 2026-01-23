@@ -36,10 +36,10 @@
             } @else {
                 <div class="space-y-6">
                     <!-- Hospitals -->
-                    @if (hospitals().length > 0) {
+                    @if (paginatedHospitals().length > 0) {
                         <div class="space-y-3">
                             <h4 class="text-xs font-black text-red-600 uppercase tracking-widest">Hospital</h4>
-                            @for (hospital of hospitals(); track hospital.nama) {
+                            @for (hospital of paginatedHospitals(); track hospital.nama) {
                                 <div class="bg-white p-4 rounded-xl border border-slate-200 flex justify-between items-center gap-3">
                                     <div class="flex-grow">
                                         <p class="font-bold text-slate-800">{{ hospital.nama }}</p>
@@ -52,12 +52,15 @@
                                 </div>
                             }
                         </div>
+                    } @else if (currentPage() > 1 && hospitals().length > 0) {
+                        <p class="text-center text-xs text-slate-400 italic">Tiada lagi hospital untuk dipaparkan.</p>
                     }
+
                     <!-- Clinics -->
-                     @if (clinics().length > 0) {
+                     @if (paginatedClinics().length > 0) {
                         <div class="space-y-3">
                             <h4 class="text-xs font-black text-blue-600 uppercase tracking-widest">Klinik</h4>
-                            @for (clinic of clinics(); track clinic.nama) {
+                            @for (clinic of paginatedClinics(); track clinic.nama) {
                                 <div class="bg-white p-4 rounded-xl border border-slate-200 flex justify-between items-center gap-3">
                                     <div class="flex-grow">
                                         <p class="font-bold text-slate-800">{{ clinic.nama }}</p>
@@ -70,8 +73,41 @@
                                 </div>
                             }
                         </div>
+                    } @else if (currentPage() > 1 && clinics().length > 0) {
+                        <p class="text-center text-xs text-slate-400 italic">Tiada lagi klinik untuk dipaparkan.</p>
                     }
                 </div>
+            }
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="p-4 bg-white/70 backdrop-blur-sm border-t border-sky-200 flex-shrink-0 rounded-b-3xl">
+            @if (!isLoading() && !error()) {
+                <div class="flex justify-between items-center gap-4">
+                    <!-- Share Button -->
+                    <button (click)="shareFacilities()" [disabled]="facilities().length === 0" class="flex items-center gap-2 bg-teal-100 text-teal-700 font-bold text-xs py-2 px-4 rounded-lg hover:bg-teal-200 transition-colors disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                        <span>Kongsi Senarai</span>
+                    </button>
+                    
+                    <!-- Pagination -->
+                    @if (totalPages() > 1) {
+                        <div class="flex justify-end items-center gap-2">
+                            <button (click)="previousPage()" [disabled]="!hasPreviousPage()" class="px-3 py-2 bg-sky-100 text-sky-700 text-xs font-bold rounded-lg hover:bg-sky-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                Sebelum
+                            </button>
+                            <span class="text-xs font-semibold text-slate-500 tabular-nums">
+                                {{ currentPage() }}/{{ totalPages() }}
+                            </span>
+                            <button (click)="nextPage()" [disabled]="!hasNextPage()" class="px-3 py-2 bg-sky-100 text-sky-700 text-xs font-bold rounded-lg hover:bg-sky-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                Seterus
+                            </button>
+                        </div>
+                    }
+                </div>
+            } @else {
+              <!-- Placeholder for footer when loading or error to prevent layout shift -->
+              <div class="h-[36px]"></div>
             }
         </div>
     </div>
