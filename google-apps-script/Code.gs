@@ -1,6 +1,10 @@
 // Set this to your Spreadsheet ID.
 var SPREADSHEET_ID = "YOUR_SPREADSHEET_ID";
 
+// =================================================================================
+// --- MECC AMAL SYSTEM CONFIG & HELPERS ---
+// =================================================================================
+
 var SHEET_NAMES = {
   PROGRAMS: 'Programs',
   ATTENDANCE: 'Attendance',
@@ -11,14 +15,8 @@ var SHEET_NAMES = {
 
 var PROGRAM_DETAILS_HEADERS = ["ID_Detail", "ID_Program", "Jenis", "Kolum_A", "Kolum_B", "Kolum_C", "Kolum_D", "Kolum_E", "DirekodkanPada"];
 
-// Use a global variable for caching the spreadsheet object to avoid re-opening it on every call.
 var SSid = null;
 
-/**
- * Gets the active spreadsheet, caching it for efficiency.
- * Throws an error if the spreadsheet cannot be opened.
- * @returns {GoogleAppsScript.Spreadsheet.Spreadsheet} The spreadsheet object.
- */
 function mecc_getActiveSpreadsheet() {
   if (SSid === null) {
     try {
@@ -31,26 +29,11 @@ function mecc_getActiveSpreadsheet() {
   return SSid;
 }
 
-
 var SUPPORTED_GET_ACTIONS = [
-  "ping", 
-  "getPrograms", 
-  "getDashboard", 
-  "getNewProgramId", 
-  "getLatestProgram", 
-  "validateSheets",
-  "getConfig",
-  "getCaseReports",
-  "getProgramDetails"
+  "ping", "getPrograms", "getDashboard", "getNewProgramId", "getLatestProgram", 
+  "validateSheets", "getConfig", "getCaseReports", "getProgramDetails"
 ];
 
-/**
- * Ensures a sheet with the given name exists and has the specified headers.
- * If the sheet or headers are missing, they will be created.
- * @param {string} sheetName The name of the sheet to ensure exists.
- * @param {string[]} headers An array of header strings for the first row.
- * @returns {GoogleAppsScript.Spreadsheet.Sheet} The sheet object.
- */
 function mecc_ensureSheetWithHeaders(sheetName, headers) {
   var spreadsheet = mecc_getActiveSpreadsheet();
   var sheet = spreadsheet.getSheetByName(sheetName);
@@ -67,11 +50,8 @@ function mecc_ensureSheetWithHeaders(sheetName, headers) {
   return sheet;
 }
 
-
 function mecc_response(data, success) {
-  if (typeof success === 'undefined') {
-    success = true;
-  }
+  if (typeof success === 'undefined') success = true;
   var output = JSON.stringify({ success: success, data: data });
   return ContentService.createTextOutput(output).setMimeType(ContentService.MimeType.JSON);
 }
@@ -83,6 +63,97 @@ function mecc_getHeaderMap(sheet) {
   headers.forEach(function(header, i) { map[header.trim()] = i; });
   return map;
 }
+
+// =================================================================================
+// --- UNIVERSAL WEB APP ENTRY POINTS (ROUTER) ---
+// =================================================================================
+
+/**
+ * Main GET entry point. Acts as a router for MECC and Responder systems.
+ */
+function doGet(e) {
+  if (SPREADSHEET_ID === "YOUR_SPREADSHEET_ID") {
+    var errorResponse = JSON.stringify({ success: false, error: "SERVER NOT CONFIGURED: Please set the SPREADSHEET_ID in the Code.gs file." });
+    return ContentService.createTextOutput(errorResponse).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  var params = e.parameter;
+
+  // --- ROUTER LOGIC ---
+  if (params.action) { // Responder system uses 'action' parameter for GET requests
+    return respond_handleGet(e);
+  } 
+  
+  // --- MECC system logic (default) ---
+  if (!params.type) return mecc_response("Parameter 'type' diperlukan untuk sistem MECC.", false);
+  
+  var type = String(params.type).trim();
+  try {
+    switch (type) {
+      case "ping": return mecc_response("pong");
+      case "getPrograms": return mecc_getPrograms();
+      case "getDashboard": return mecc_getDashboard();
+      case "getNewProgramId": return mecc_response(mecc_generateNextProgramId());
+      case "getLatestProgram": return mecc_getLatestProgram();
+      case "validateSheets": return mecc_validateSheets();
+      case "getCaseReports": return mecc_getCaseReports(params.programId);
+      case "getProgramDetails": return mecc_getProgramDetails(params.programId);
+      case "getConfig": return mecc_response({ actions: SUPPORTED_GET_ACTIONS, sheetNames: SHEET_NAMES, spreadsheetId: SPREADSHEET_ID });
+      default: return mecc_response("Action GET MECC tidak dikenali: " + type, false);
+    }
+  } catch (error) {
+    Logger.log("Error in MECC doGet for type '" + type + "': " + error.message + "\nStack: " + error.stack);
+    return mecc_response("Error in MECC doGet: " + error.message, false);
+  }
+}
+
+/**
+ * Main POST entry point. Acts as a router for MECC and Responder systems.
+ */
+function doPost(e) {
+  if (SPREADSHEET_ID === "YOUR_SPREADSHEET_ID") {
+    var errorResponse = JSON.stringify({ success: false, error: "SERVER NOT CONFIGURED: Please set the SPREADSHEET_ID in the Code.gs file." });
+    return ContentService.createTextOutput(errorResponse).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  var body;
+  try {
+    body = JSON.parse(e.postData.contents);
+  } catch (err) {
+    var genericError = JSON.stringify({ success: false, error: "Invalid JSON in POST data." });
+    return ContentService.createTextOutput(genericError).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // --- ROUTER LOGIC ---
+  // MECC system wraps its data in a 'payload' object. Responder system does not.
+  if (body.payload !== undefined) {
+    // This is a MECC system request
+    try {
+      switch(body.action) {
+        case 'saveProgram': return mecc_saveProgram(body.payload);
+        case 'updateProgram': return mecc_updateProgram(body.payload);
+        case 'setProgramStatus': return mecc_setProgramStatus(body.payload);
+        case 'updateCaseStatus': return mecc_updateCaseStatus(body.payload);
+        case 'saveProgramDetail': return mecc_saveProgramDetail(body.payload);
+        case 'updateProgramDetail': return mecc_updateProgramDetail(body.payload);
+        case 'saveFeatureListToDocs': return mecc_saveFeatureListToDocs(body.payload);
+        case 'sendFeedback': return mecc_sendFeedback(body.payload);
+        case 'addSampleData': return mecc_addSampleDataToLatestProgram();
+        default: return mecc_response('MECC Action POST tidak dikenali: ' + body.action, false);
+      }
+    } catch (error) {
+      Logger.log("Error in MECC doPost: " + error.message + "\nStack: " + error.stack);
+      return mecc_response("Error in MECC doPost: " + error.message, false);
+    }
+  } else {
+    // This is a Responder system request
+    return respond_handlePost(e, body); // Pass the already-parsed body
+  }
+}
+
+// =================================================================================
+// --- MECC AMAL SYSTEM - CORE FUNCTIONS ---
+// =================================================================================
 
 function mecc_isProgramsSheetEmpty(sheet) {
   return sheet.getLastRow() < 2;
@@ -125,7 +196,7 @@ function mecc_validateSheetStructure(sheetName) {
   var requiredHeaders = {};
   requiredHeaders[SHEET_NAMES.PROGRAMS] = ["ID Program", "Nama Program"];
   requiredHeaders[SHEET_NAMES.ATTENDANCE] = ["Nama Responder", "Mula Tugas"];
-  requiredHeaders[SHEET_NAMES.CASE_REPORTS] = ["ID Kes", "ID Program"];
+  requiredHeaders[SHEET_NAMES.CASE_REPORTS] = ["ID Kes", "ID Program", "Butiran", "Status", "Masa Laporan", "Lokasi"];
   requiredHeaders[SHEET_NAMES.PROGRAM_DETAILS] = PROGRAM_DETAILS_HEADERS;
   
   if (requiredHeaders[sheetName]) {
@@ -152,58 +223,6 @@ function mecc_validateSheets() {
     programDetails: mecc_validateSheetStructure(SHEET_NAMES.PROGRAM_DETAILS)
   };
   return mecc_response(results, true);
-}
-
-function doGet(e) {
-  if (SPREADSHEET_ID === "YOUR_SPREADSHEET_ID") {
-    return mecc_response("SERVER NOT CONFIGURED: Please set the SPREADSHEET_ID in the Code.gs file.", false);
-  }
-  var params = e.parameter;
-  if (!params.type) return mecc_response("Parameter 'type' diperlukan.", false);
-  
-  var type = String(params.type).trim();
-
-  try {
-    switch (type) {
-      case "ping": return mecc_response("pong");
-      case "getPrograms": return mecc_getPrograms();
-      case "getDashboard": return mecc_getDashboard();
-      case "getNewProgramId": return mecc_response(mecc_generateNextProgramId());
-      case "getLatestProgram": return mecc_getLatestProgram();
-      case "validateSheets": return mecc_validateSheets();
-      case "getCaseReports": return mecc_getCaseReports(params.programId);
-      case "getProgramDetails": return mecc_getProgramDetails(params.programId);
-      case "getConfig": return mecc_response({ actions: SUPPORTED_GET_ACTIONS, sheetNames: SHEET_NAMES, spreadsheetId: SPREADSHEET_ID });
-      default: return mecc_response("Action GET tidak dikenali: " + type, false);
-    }
-  } catch (error) {
-    Logger.log("Error in doGet for type '" + type + "': " + error.message + "\nStack: " + error.stack);
-    return mecc_response("Error in doGet: " + error.message, false);
-  }
-}
-
-function doPost(e) {
-  if (SPREADSHEET_ID === "YOUR_SPREADSHEET_ID") {
-    return mecc_response("SERVER NOT CONFIGURED: Please set the SPREADSHEET_ID in the Code.gs file.", false);
-  }
-  try {
-    var body = JSON.parse(e.postData.contents);
-    switch(body.action) {
-      case 'saveProgram': return mecc_saveProgram(body.payload);
-      case 'updateProgram': return mecc_updateProgram(body.payload);
-      case 'setProgramStatus': return mecc_setProgramStatus(body.payload);
-      case 'updateCaseStatus': return mecc_updateCaseStatus(body.payload);
-      case 'saveProgramDetail': return mecc_saveProgramDetail(body.payload);
-      case 'updateProgramDetail': return mecc_updateProgramDetail(body.payload);
-      case 'saveFeatureListToDocs': return mecc_saveFeatureListToDocs(body.payload);
-      case 'sendFeedback': return mecc_sendFeedback(body.payload);
-      case 'addSampleData': return mecc_addSampleDataToLatestProgram();
-      default: return mecc_response('Action POST tidak dikenali: ' + body.action, false);
-    }
-  } catch (error) {
-    Logger.log("Error in doPost: " + error.message + "\nStack: " + error.stack);
-    return mecc_response("Error in doPost: " + error.message, false);
-  }
 }
 
 function mecc_getPrograms() {
@@ -539,7 +558,6 @@ function mecc_updateProgramDetail(payload) {
   return mecc_response(finalResponse);
 }
 
-
 function mecc_addSampleDataToLatestProgram() {
   var programsSheet = mecc_getActiveSpreadsheet().getSheetByName(SHEET_NAMES.PROGRAMS);
   if (!programsSheet || programsSheet.getLastRow() < 2) return mecc_response("No programs found.", false);
@@ -586,7 +604,6 @@ function mecc_saveFeatureListToDocs(payload) {
 }
 
 function mecc_sendFeedback(payload) {
-  // Basic validation
   if (!payload || !payload.feedbackType || !payload.rating || !payload.message) {
     return mecc_response("Payload maklum balas tidak lengkap.", false);
   }
@@ -625,4 +642,240 @@ function mecc_sendFeedback(payload) {
     Logger.log("Failed to send feedback email: " + e.message + " | Payload: " + JSON.stringify(payload));
     return mecc_response("Gagal menghantar e-mel maklum balas. Sila cuba lagi kemudian.", false);
   }
+}
+
+// =================================================================================
+// --- RESPONDER SYSTEM - v3.3 ---
+// =================================================================================
+
+const TELEGRAM_TOKEN = ''; 
+const TELEGRAM_CHAT_ID = '';
+
+const CONFIG = {
+  SHEETS: {
+    PROGRAMS: {
+      name: 'Programs',
+      headers: ['ID Program', 'Nama Program', 'Tarikh Program', 'Lokasi Program', 'Status']
+    },
+    ATTENDANCE: {
+      name: 'Attendance',
+      headers: ['Nama', 'Program', 'Checkpoint', 'Masa Masuk', 'Masa Keluar', 'Status', 'Project Source']
+    },
+    CASE_REPORTS: {
+      name: 'CaseReports',
+      headers: ['ID Kes', 'Masa', 'Responder', 'Program/CP', 'Nama Pesakit', 'Umur', 'Jantina', 'Simptom', 'Kesedaran', 'BP', 'PR', 'DXT', 'Temp', 'Rawatan', 'Status', 'Lokasi', 'Source']
+    },
+    RESPONDERS: {
+      name: 'Responders',
+      headers: ['Nama', 'Program', 'Checkpoint', 'Timestamp', 'Project Source']
+    }
+  }
+};
+
+/**
+ * Responder System GET Handler
+ */
+function respond_handleGet(e) {
+  const action = e.parameter.action;
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  
+  try {
+    if (action === 'ping') {
+      return respond_createResponse({ status: "ok", message: "pong", timestamp: new Date().toISOString() });
+    }
+
+    if (action === 'getPrograms') {
+      const sheet = respond_ensureSheet(CONFIG.SHEETS.PROGRAMS);
+      const data = sheet.getDataRange().getValues();
+      if (data.length <= 1) return respond_createResponse([]);
+      const headers = data.shift();
+      const mappedData = data.map(function(row) {
+        var obj = {};
+        headers.forEach(function(h, i) { obj[h.trim()] = row[i]; });
+        return obj;
+      });
+      return respond_createResponse(mappedData);
+    }
+
+    if (action === 'getAttendance') {
+      const sheet = respond_ensureSheet(CONFIG.SHEETS.ATTENDANCE);
+      const data = sheet.getDataRange().getValues();
+      if (data.length <= 1) return respond_createResponse([]);
+      const headers = data.shift();
+      const result = data.map(function(row) {
+        var obj = {};
+        headers.forEach(function(h, i) { obj[h.trim()] = row[i]; });
+        return obj;
+      });
+      return respond_createResponse(result.reverse().slice(0, 20));
+    }
+
+    if (action === 'getRecentCases') {
+      const sheet = respond_ensureSheet(CONFIG.SHEETS.CASE_REPORTS);
+      const lastRow = sheet.getLastRow();
+      if (lastRow <= 1) return respond_createResponse([]);
+      const startRow = Math.max(2, lastRow - 14);
+      const numRows = lastRow - startRow + 1;
+      const data = sheet.getRange(startRow, 1, numRows, sheet.getLastColumn()).getValues();
+      const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      const result = data.reverse().map(function(row) {
+        var obj = {};
+        headers.forEach(function(h, i) { obj[h.trim()] = row[i]; });
+        return obj;
+      });
+      return respond_createResponse(result);
+    }
+
+    if (action === 'getProgramDetails') {
+      const programId = e.parameter.programId;
+      return respond_getProgramDetails(programId);
+    }
+
+    return respond_createResponse("Action not found: " + action, false);
+  } catch (err) {
+    return respond_createResponse(err.message, false);
+  }
+}
+
+/**
+ * Gets all details (Checkpoints, Ambulances, etc.) for a specific program for the Responder system.
+ * @param {string} programId The ID of the program to fetch details for.
+ * @returns {ContentService.TextOutput} JSON response with the program details.
+ */
+function respond_getProgramDetails(programId) {
+    if (!programId) {
+      return respond_createResponse("'programId' is required.", false);
+    }
+
+    // Use the robust MECC sheet/header ensuring logic, as it's a shared sheet.
+    var sheet = mecc_ensureSheetWithHeaders(SHEET_NAMES.PROGRAM_DETAILS, PROGRAM_DETAILS_HEADERS);
+    if (sheet.getLastRow() < 2) {
+      return respond_createResponse([]); // Return empty array if no data
+    }
+
+    var data = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues();
+    var h = mecc_getHeaderMap(sheet);
+    
+    if (h.ID_Program === undefined) {
+        return respond_createResponse("ID_Program column missing in ProgramDetails sheet.", false);
+    }
+
+    var filteredData = data.filter(function(r) { 
+        return r[h.ID_Program] == programId; 
+    }).map(function(r) {
+        var jenis = r[h.Jenis];
+        var base = { id: r[h.ID_Detail], programId: r[h.ID_Program], jenis: jenis, timestamp: r[h.DirekodkanPada] };
+        if (jenis === 'Cekpoint') return Object.assign(base, { name: r[h.Kolum_A], location: r[h.Kolum_B], pic: r[h.Kolum_C], callSign: r[h.Kolum_D], crew: r[h.Kolum_E] });
+        if (jenis === 'Ambulan') return Object.assign(base, { callSign: r[h.Kolum_A], vehicleNumber: r[h.Kolum_B], crew: r[h.Kolum_C] });
+        if (jenis === 'Lain') return Object.assign(base, { title: r[h.Kolum_A], details: r[h.Kolum_B] });
+        return base;
+    });
+    
+    return respond_createResponse(filteredData);
+}
+
+/**
+ * Responder System POST Handler (expects pre-parsed payload)
+ */
+function respond_handlePost(e, payload) {
+  const action = payload.action;
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const source = payload.projectSource || "Unknown Project";
+  
+  try {
+    if (action === 'addCase') {
+      const sheet = respond_ensureSheet(CONFIG.SHEETS.CASE_REPORTS);
+      const timestampStr = new Date(payload.timestamp).toLocaleString('ms-MY');
+      sheet.appendRow([
+        payload.idKes, timestampStr, payload.recordedBy, payload.programCP,
+        payload.p_name, payload.p_age, payload.p_gender, payload.symptoms,
+        payload.kesedaran, payload.vitalBP, payload.vitalPR, payload.vitalDXT, payload.vitalTemp,
+        payload.treatment, payload.statusAkhir, 
+        payload.location ? payload.location.lat + ', ' + payload.location.lng : 'N/A',
+        source
+      ]);
+
+      if (TELEGRAM_TOKEN && TELEGRAM_CHAT_ID) {
+        try { respond_sendTelegramNotification(payload, timestampStr); } catch (err) {}
+      }
+      return respond_createResponse({ success: true, idKes: payload.idKes });
+    }
+
+    if (action === 'startSession') {
+      const respSheet = respond_ensureSheet(CONFIG.SHEETS.RESPONDERS);
+      respSheet.appendRow([payload.name, payload.programName, payload.checkpoint, new Date().toLocaleString('ms-MY'), source]);
+      const attSheet = respond_ensureSheet(CONFIG.SHEETS.ATTENDANCE);
+      attSheet.appendRow([payload.name, payload.programName, payload.checkpoint, new Date().toLocaleString('ms-MY'), '-', 'Bertugas', source]);
+      return respond_createResponse({ success: true });
+    }
+
+    if (action === 'endSession') {
+      const attSheet = ss.getSheetByName(CONFIG.SHEETS.ATTENDANCE.name);
+      if (attSheet) {
+        const data = attSheet.getDataRange().getValues();
+        const hMap = respond_getHeaderMap(attSheet);
+        const sName = String(payload.name).trim().toLowerCase();
+        const sCP = String(payload.checkpoint).trim().toLowerCase();
+        for (var i = data.length - 1; i >= 1; i--) {
+          const rowName = String(data[i][hMap['Nama']]).trim().toLowerCase();
+          const rowCP = String(data[i][hMap['Checkpoint']]).trim().toLowerCase();
+          const rowStatus = String(data[i][hMap['Status']]).trim();
+          if (rowName === sName && rowCP === sCP && rowStatus === 'Bertugas') {
+            attSheet.getRange(i + 1, hMap['Masa Keluar'] + 1).setValue(new Date().toLocaleString('ms-MY'));
+            attSheet.getRange(i + 1, hMap['Status'] + 1).setValue('Tamat');
+            break;
+          }
+        }
+      }
+      return respond_createResponse({ success: true });
+    }
+
+    return respond_createResponse("POST Action not found: " + action, false);
+  } catch (err) {
+    return respond_createResponse(err.message, false);
+  }
+}
+
+/** 
+ * RESPONDER SYSTEM - INTERNAL HELPERS
+ */
+function respond_ensureSheet(sheetConfig) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(sheetConfig.name);
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetConfig.name);
+    sheet.appendRow(sheetConfig.headers);
+    sheet.setFrozenRows(1);
+  } else if (sheet.getLastRow() === 0) {
+    sheet.appendRow(sheetConfig.headers);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function respond_getHeaderMap(sheet) {
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var map = {};
+  headers.forEach(function(h, i) { map[h.trim()] = i; });
+  return map;
+}
+
+function respond_sendTelegramNotification(p, time) {
+  const message = '🚨 *LAPORAN KES BARU: ' + p.idKes + '* 🚨\n👤 *Responder:* ' + p.recordedBy + '\n📍 *CP:* ' + p.programCP + '\n🏥 *Pesakit:* ' + p.p_name + '\n✅ *STATUS:* ' + p.statusAkhir;
+  const url = 'https://api.telegram.org/bot' + TELEGRAM_TOKEN + '/sendMessage';
+  UrlFetchApp.fetch(url, {
+    method: 'post', contentType: 'application/json',
+    payload: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message, parse_mode: 'Markdown' })
+  });
+}
+
+function respond_createResponse(data, success) {
+  if (typeof success === 'undefined') success = true;
+  const payload = { success: success };
+  if (success) {
+    payload.data = data;
+  } else {
+    payload.error = data;
+  }
+  return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.JSON);
 }
