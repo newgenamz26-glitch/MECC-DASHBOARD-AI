@@ -27,6 +27,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isAttendanceLogVisible = signal(false);
   latestAttendance = computed(() => this.attendanceList()?.[0] ?? null);
   olderAttendance = computed(() => this.attendanceList()?.slice(1) ?? []);
+  newlyAddedAttendanceId = signal<string | null>(null);
 
   // Signals for Case Reports
   caseReports = signal<CaseReport[]>([]);
@@ -106,6 +107,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   async fetchAttendance(): Promise<void> {
     const isSimMode = this.stateSvc.isSimulationMode();
+    const latestEntryBeforeFetch = this.attendanceList().length > 0 ? this.attendanceList()[0] : null;
 
     if (!isSimMode && this.isLoading()) return;
 
@@ -119,12 +121,27 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const data = await this.apiSvc.getAttendance();
       if (Array.isArray(data)) {
         const reversedData = isSimMode ? data : data.reverse();
+        
         if (oldListCount > 0 && reversedData.length > oldListCount) {
             const newCount = reversedData.length - oldListCount;
             const responderText = newCount > 1 ? 'responder baru telah' : 'responder baru telah';
             this.notificationSvc.show('info', 'Kehadiran Dikemaskini', `${newCount} ${responderText} mendaftar masuk.`);
         }
+
         this.attendanceList.set(reversedData);
+
+        const latestEntryAfterFetch = this.attendanceList().length > 0 ? this.attendanceList()[0] : null;
+
+        if (latestEntryAfterFetch && (!latestEntryBeforeFetch || (latestEntryAfterFetch.nama + latestEntryAfterFetch.mula) !== (latestEntryBeforeFetch.nama + latestEntryBeforeFetch.mula))) {
+            const newEntryId = latestEntryAfterFetch.nama + latestEntryAfterFetch.mula;
+            this.newlyAddedAttendanceId.set(newEntryId);
+            setTimeout(() => {
+                if (this.newlyAddedAttendanceId() === newEntryId) {
+                    this.newlyAddedAttendanceId.set(null);
+                }
+            }, 5000); // Highlight for 5 seconds
+        }
+
       } else {
         this.attendanceList.set([]);
         this.error.set('Format data kehadiran tidak sah.');

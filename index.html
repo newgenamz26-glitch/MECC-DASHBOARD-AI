@@ -48,6 +48,19 @@
         .animate-slide-out-right {
             animation: slide-out-right 0.4s ease-in forwards;
         }
+        @keyframes new-entry-highlight-anim {
+            0% {
+                border-color: #2dd4bf; /* teal-400 */
+                box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.4);
+            }
+            100% {
+                border-color: #bae6fd; /* sky-200 */
+                box-shadow: 0 0 0 0 rgba(45, 212, 191, 0);
+            }
+        }
+        .new-entry-highlight {
+            animation: new-entry-highlight-anim 5s ease-out forwards;
+        }
     </style>
 <script type="importmap">
 {

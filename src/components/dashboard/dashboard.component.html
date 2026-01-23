@@ -296,7 +296,11 @@
         } @else {
           <!-- LATEST ATTENDANCE HIGHLIGHT -->
           @if (latestAttendance(); as att) {
-            <div class="bg-white rounded-2xl p-4 border-2 border-sky-200 shadow-lg shadow-sky-100/50" [class.pulse-sky]="!att.tamat && stateSvc.isSimulationMode()">
+            <div 
+              class="bg-white rounded-2xl p-4 border-2 border-sky-200 shadow-lg shadow-sky-100/50" 
+              [class.pulse-sky]="!att.tamat && stateSvc.isSimulationMode()"
+              [class.new-entry-highlight]="newlyAddedAttendanceId() === (att.nama + att.mula)"
+            >
               <div class="flex justify-between items-start">
                 <div>
                   <p class="font-bold text-slate-800">{{ att.nama }}</p>
