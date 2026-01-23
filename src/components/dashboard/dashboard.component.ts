@@ -7,11 +7,10 @@ import { ApiService } from '../../services/api.service';
 import { NotificationService } from '../../services/notification.service';
 import { Attendance, CaseReport, Checkpoint, Ambulance, OtherInfo } from '../../models';
 import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicator.component';
-import { FacilityFinderComponent } from '../facility-finder/facility-finder.component';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule, LoadingIndicatorComponent, FacilityFinderComponent],
+  imports: [CommonModule, LoadingIndicatorComponent],
   templateUrl: './dashboard.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

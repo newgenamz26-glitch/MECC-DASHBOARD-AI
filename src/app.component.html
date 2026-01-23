@@ -89,12 +89,10 @@
 
   <!-- Main Content -->
   <main class="max-w-md mx-auto p-4 space-y-5">
-      @switch (activeTab()) {
-        @case ('dashboard') { <app-dashboard></app-dashboard> }
-        @case ('program') { <app-program-selector></app-program-selector> }
-        @case ('report') { <app-report-generator></app-report-generator> }
-        @case ('settings') { <app-settings></app-settings> }
-      }
+      <div [hidden]="activeTab() !== 'dashboard'"><app-dashboard></app-dashboard></div>
+      <div [hidden]="activeTab() !== 'program'"><app-program-selector></app-program-selector></div>
+      <div [hidden]="activeTab() !== 'report'"><app-report-generator></app-report-generator></div>
+      <div [hidden]="activeTab() !== 'settings'"><app-settings></app-settings></div>
   </main>
 
   <!-- Bottom Navigation -->

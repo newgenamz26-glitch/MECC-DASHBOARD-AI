@@ -105,6 +105,18 @@ export class AppComponent {
         this.stateSvc.initialTab.set(null); // Consume it
       }
     });
+
+    // New effect to sync program data when navigating to dashboard
+    let isFirstRun = true;
+    effect(() => {
+      const currentTab = this.activeTab();
+      // On subsequent navigations to the dashboard, trigger a program data refresh.
+      // This ensures the active program status is always up-to-date.
+      if (currentTab === 'dashboard' && !isFirstRun) {
+        this.stateSvc.programListVersion.update(v => v + 1);
+      }
+      isFirstRun = false;
+    });
   }
 
   private checkAppVersion(): void {
